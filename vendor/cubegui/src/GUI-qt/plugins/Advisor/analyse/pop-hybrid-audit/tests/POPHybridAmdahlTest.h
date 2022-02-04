@@ -1,0 +1,84 @@
+/****************************************************************************
+**  CUBE        http://www.scalasca.org/                                   **
+*****************************************************************************
+**  Copyright (c) 2015-2020                                                **
+**  Forschungszentrum Juelich GmbH, Juelich Supercomputing Centre          **
+**                                                                         **
+**  This software may be modified and distributed under the terms of       **
+**  a BSD-style license.  See the COPYING file in the package base         **
+**  directory for details.                                                 **
+****************************************************************************/
+
+
+#ifndef POP_HYBRID_AMDAHL_TEST_H
+#define POP_HYBRID_AMDAHL_TEST_H
+
+#include <string>
+#include "PerformanceTest.h"
+
+
+namespace advisor
+{
+class POPHybridAmdahlTest : public PerformanceTest
+{
+private:
+    cube::Metric* pop_avg_comp;
+    cube::Metric* pop_avg_omp_comp;
+    cube::Metric* pop_avg_ser_comp;
+
+    cube::list_of_metrics lavg_omp_metrics;
+    cube::list_of_metrics lavg_ser_metrics;
+
+    void
+    add_amdahl( cube::CubeProxy* ) const;
+
+    void
+    add_avg_comp( cube::CubeProxy* ) const;
+
+protected:
+
+    void
+    applyCnode( const cube::list_of_cnodes& cnodes,
+                const bool                  direct_calculation = false   );
+
+    void
+    applyCnode( const cube::Cnode*             cnode,
+                const cube::CalculationFlavour cnf = cube::CUBE_CALCULATE_INCLUSIVE,
+                const bool                     direct_calculation = false );
+
+    virtual
+    const std::string&
+    getCommentText() const;
+
+    inline
+    virtual
+    const
+    QString
+    getHelpUrl()
+    {
+        return ( isActive() ) ?
+               QString::fromStdString( "AdvisorPOPHybridTestsAmdahl_efficiency.html" ) :
+               QString::fromStdString( "AdvisorPOPHybridTestsMissingAmdahl_transfer_efficiency.html" );
+    }
+
+    virtual
+    void
+    adjustForTest( cube::CubeProxy* cube ) const;
+
+public:
+    POPHybridAmdahlTest( cube::CubeProxy* );
+
+    virtual
+    ~POPHybridAmdahlTest()
+    {
+    };
+// ------ overview tests ---------
+
+    bool
+    isActive() const;
+
+    bool
+    isIssue() const;
+};
+};
+#endif // POPHybrid_IMBALANCE_TEST_H

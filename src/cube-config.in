@@ -1,0 +1,63 @@
+#!/bin/bash
+##*************************************************************************##
+##  CUBE        http://www.scalasca.org/                                   ##
+##*************************************************************************##
+##  Copyright (c) 1998-2017                                                ##
+##  Forschungszentrum Juelich GmbH, Juelich Supercomputing Centre          ##
+##                                                                         ##
+##  This software may be modified and distributed under the terms of       ##
+##  a BSD-style license.  See the COPYING file in the package base         ##
+##  directory for details.                                                 ##
+##*************************************************************************##
+
+
+CUBEW_CONFIG=@prefix@/bin/cubew-config
+CUBELIB_CONFIG=@prefix@/bin/cubelib-config
+
+function run_cases
+{
+    case "$1" in
+    --writer-cppflags)
+        shift 
+	$CUBEW_CONFIG --cflags $@
+        ;;
+    --writer-ldflags)
+        shift 
+        $CUBEW_CONFIG --ldflags $@
+        ;;
+    --writer-libs)
+        shift 
+        echo `$CUBEW_CONFIG --libs $@` -lcubewriter4
+        ;;
+    --reader-cppflags)
+        shift 
+        $CUBELIB_CONFIG --cflags $@
+        ;;
+    --reader-ldflags)
+        shift 
+        $CUBELIB_CONFIG --ldflags $@
+        ;;
+    --reader-libs)
+        shift 
+        $CUBELIB_CONFIG --libs $@
+        ;;
+    --reader-cxx)
+        shift 
+        $CUBELIB_CONFIG --cxx $@
+        ;;
+    --interface-version)
+	$CUBELIB_CONFIG --interface-version $@
+	;;
+    "" | --help)
+	echo "cube-config  COMMAND [OPTION] ..."
+	echo "    It is a tool to allow to use 4.4.x framework in Score-P < 4.x  "
+	echo "    versions."
+	;;
+   esac
+}
+
+
+run_cases $@
+
+
+

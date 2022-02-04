@@ -1,0 +1,30 @@
+Name: CUBE
+Version: 4.6
+Notes:
+ CubeGUI (4.6)
+    - Support of Qt6
+    - Added task call tree.
+    - Implemented undo operation for call tree modifications.
+    - Fixed dependencies of reroot/prune operation.
+    - Info displays attributes of all tree elements.
+    - Value widget uses selected stylesheets as well.
+    - Metric Editor supports creation of non-rowwise metrics.
+    - Provide a command line autocompletion script.
+    - Usage of QWebEngine is optional.
+    - Usage of QConcurrent is optional.
+    - One can disable usage of the parallel calculation during the configure step.
+    - Plugin "Advisor" supports hybrid POP2 assesments.
+    - Various bug fixes in GUI.
+ CubeLib (4.6)
+    - cube_server lists only CUBE files.
+    - Removed cube_score as EPIK traces are depricated.
+    - Support for region names with non-latin symbols. 
+    - Added memory dump for CubePL engine.
+    - cube_dump prints our CubePL memory if configured with --enable-debug.
+    - Various bug fixes in library.
+ CubeW (4.6)
+    - Small improvements in build system.
+ jCubeR (4.6)
+    - Minor improvements in build system.
+    
+    

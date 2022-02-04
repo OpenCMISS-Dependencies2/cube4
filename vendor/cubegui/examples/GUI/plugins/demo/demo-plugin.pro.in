@@ -1,0 +1,31 @@
+##*************************************************************************##
+##  CUBE        http://www.scalasca.org/                                   ##
+##*************************************************************************##
+##  Copyright (c) 1998-2016                                                ##
+##  Forschungszentrum Juelich GmbH, Juelich Supercomputing Centre          ##
+##                                                                         ##
+##  Copyright (c) 2009-2015                                                ##
+##  German Research School for Simulation Sciences GmbH,                   ##
+##  Laboratory for Parallel Programming                                    ##
+##                                                                         ##
+##  This software may be modified and distributed under the terms of       ##
+##  a BSD-style license.  See the COPYING file in the package base         ##
+##  directory for details.                                                 ##
+##*************************************************************************##
+
+
+CUBEGUI_CONFIG = @prefix@/bin/cubegui-config
+CUBELIB_CONFIG = @CUBE_CUBELIB@
+
+INCLUDEPATH    += $$system($$CUBEGUI_CONFIG --include) $$system($$CUBELIB_CONFIG --include)
+LIBS           += $$system($$CUBEGUI_CONFIG --ldflags) $$system($$CUBEGUI_CONFIG --libs)
+
+
+TEMPLATE        = lib
+CONFIG         += plugin
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+
+HEADERS         = DemoPlugin.h
+SOURCES         = DemoPlugin.cpp
+TARGET          = $$qtLibraryTarget(DemoPlugin)
+RESOURCES       = demo-plugin.qrc

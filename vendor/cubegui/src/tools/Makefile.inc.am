@@ -1,0 +1,72 @@
+##*************************************************************************##
+##  CUBE        http://www.scalasca.org/                                   ##
+##*************************************************************************##
+##  Copyright (c) 2009-2018                                                ##
+##  Forschungszentrum Juelich GmbH, Juelich Supercomputing Centre          ##
+##                                                                         ##
+##  Copyright (c) 2009-2015                                                ##
+##  German Research School for Simulation Sciences GmbH,                   ##
+##  Laboratory for Parallel Programming                                    ##
+##                                                                         ##
+##  Copyright (c) 2009-2011                                                ##
+##  RWTH Aachen University, JARA-HPC                                       ##
+##                                                                         ##
+##  Copyright (c) 2009-2016                                                ##
+##  TU Dresden, Zentrum fuer Informationsdienste und Hochleistungsrechnen  ##
+##                                                                         ##
+##  Copyright (c) 2009-2013                                                ##
+##  Technische Universitaet Muenchen, Germany                              ##
+##                                                                         ##
+##  Copyright (c) 2009-2013                                                ##
+##  University of Oregon, Eugene, USA                                      ##
+##                                                                         ##
+##  Copyright (c) 2009-2013                                                ##
+##  Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany      ##
+##                                                                         ##
+##  This software may be modified and distributed under the terms of       ##
+##  a BSD-style license.  See the COPYING file in the package base         ##
+##  directory for details.                                                 ##
+##*************************************************************************##
+
+
+
+bin_PROGRAMS += cubegui-config
+
+EXTRA_DIST += $(SRC_ROOT)src/tools/cubegui_config_usage.dox.in 
+
+cubegui_config_SOURCES = \
+    $(SRC_ROOT)src/tools/cubegui_config.cpp \
+    $(SRC_ROOT)src/tools/cubegui_config.hpp \
+    $(SRC_ROOT)src/tools/cubegui_config_data.cpp \
+    $(SRC_ROOT)src/tools/cubegui_config_data.hpp \
+    $(SRC_ROOT)src/tools/cubegui_config_helper.cpp \
+    $(SRC_ROOT)src/tools/cubegui_tools.h 
+
+cubegui_config_CPPFLAGS = \
+    $(AM_CPPFLAGS) \
+    $(UTILS_CPPFLAGS) \
+    -I$(INC_ROOT)build-config/common/ \
+    -I../src \
+    -I../src/tools \
+    -I$(INC_ROOT)src/tools \
+    -I$(CUBE4_TOOLS_COMMON_INC)
+
+cubegui_config_LDADD = 
+
+cubegui_config_SOURCES += \
+    ../src/tools/cubegui_config_data_frontend.cpp
+
+BUILT_SOURCES += \
+    ../src/tools/cubegui_config_library_dependencies_frontend_inc.hpp
+
+CLEANFILES += \
+    ../src/tools/cubegui_config_library_dependencies_frontend_inc.hpp
+
+# The library dependencies are needed for the frontend tool. However, the
+# backend information is in the backend Makefile. Thus, invoke the backend
+# Makefile.
+
+../src/tools/cubegui_config_library_dependencies_frontend_inc.hpp: $(lib_LTLIBRARIES)
+	$(AM_V_GEN)$(srcdir)/../build-config/common/generate-library-dependencies.sh frontend $^ >$@ || \
+            ($(RM) $@; exit 1)
+

@@ -1,0 +1,87 @@
+##*************************************************************************##
+##  CUBE        http://www.scalasca.org/                                   ##
+##*************************************************************************##
+##  Copyright (c) 1998-2016                                                ##
+##  Forschungszentrum Juelich GmbH, Juelich Supercomputing Centre          ##
+##                                                                         ##
+##  Copyright (c) 2009-2015                                                ##
+##  German Research School for Simulation Sciences GmbH,                   ##
+##  Laboratory for Parallel Programming                                    ##
+##                                                                         ##
+##  This software may be modified and distributed under the terms of       ##
+##  a BSD-style license.  See the COPYING file in the package base         ##
+##  directory for details.                                                 ##
+##*************************************************************************##
+
+
+## --------------- CALLTREE ---------------------------
+
+CUBE4_GUI_QT_PLUGINS_GRAPHWIDGET_COMMON_INC = $(INC_ROOT)src/GUI-qt/plugins/Grapgwidget-common
+
+launch_plugindir = $(libdir)/plugins
+lib_LTLIBRARIES += libgraphwidgetcommon-plugin.la
+
+libgraphwidgetcommon_plugin_la_SOURCES = \
+$(SRC_ROOT)src/GUI-qt/plugins/Graphwidget-common/AbstractPlotArea.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Graphwidget-common/AbstractPlotArea.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Graphwidget-common/AbstractPlotAreaController.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Graphwidget-common/AbstractPlotAreaController.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Graphwidget-common/AbstractRuler.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Graphwidget-common/AbstractRuler.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Graphwidget-common/AbstractRulerController.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Graphwidget-common/AbstractRulerController.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Graphwidget-common/CubeDataItem.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Graphwidget-common/CubeDataItem.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Graphwidget-common/CubeRead.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Graphwidget-common/CubeRead.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Graphwidget-common/DataProvider.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Graphwidget-common/DataProvider.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Graphwidget-common/HorizontalRuler.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Graphwidget-common/HorizontalRuler.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Graphwidget-common/HorizontalRulerController.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Graphwidget-common/HorizontalRulerController.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Graphwidget-common/ImageSaverController.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Graphwidget-common/ImageSaverController.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Graphwidget-common/VerticalRuler.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Graphwidget-common/VerticalRuler.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Graphwidget-common/VerticalRulerController.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Graphwidget-common/VerticalRulerController.h\
+$(SRC_ROOT)src/GUI-qt/plugins/Graphwidget-common/GraphWidgetGlobals.h 
+
+
+
+
+
+libgraphwidgetcommon_plugin_la_LIBADD =  \
+    $(CUBELIB_LIBADD)\
+    libcube4gui.la 
+libgraphwidgetcommon_plugin_la_LDFLAGS = $(QT_LDFLAGS) $(OPENMP_LDFLAGS) $(OPENMP_CXXFLAGS) -version-info @LIBRARY_INTERFACE_VERSION@ $(SUBLIBS) $(QT_LIBS)  $(FRONTEND_LIBZ_LD) $(DBUS_LDFLAGS) $(CUBELIB_LDFLAGS)
+
+
+
+libgraphwidgetcommon_plugin_la_CXXFLAGS = $(AM_CXXFLAGS) $(CXXFLAGS_FOR_BUILD) $(OPENMP_CXXFLAGS) $(DBUS_CXXFLAGS) $(FRONTEND_LIBZ_HEADERS) \
+-I$(CUBE4_HEADERS_ROOT) $(QT_CXXFLAGS) $(QT_CPPFLAGS) -DCUBE_PREFIX='"$(prefix)"' -DWITH_PLUGINS\
+$(HMI_INSTRUMENTATION) \
+$(CUBELIB_INCLUDEPATH) \
+$(CUBE_DEBUG_FLAGS) $(GUI_INCLUDES)\
+-I.
+
+libgraphwidgetcommon_plugin_moc_files = \
+../src/GUI-qt/plugins/Graphwidget-common/AbstractPlotArea.moc.cpp \
+../src/GUI-qt/plugins/Graphwidget-common/AbstractPlotAreaController.moc.cpp \
+../src/GUI-qt/plugins/Graphwidget-common/AbstractRuler.moc.cpp \
+../src/GUI-qt/plugins/Graphwidget-common/AbstractRulerController.moc.cpp\
+../src/GUI-qt/plugins/Graphwidget-common/DataProvider.moc.cpp \
+../src/GUI-qt/plugins/Graphwidget-common/ImageSaverController.moc.cpp
+
+libgraphwidgetcommon_plugin_moc_o=$(libgraphwidgetcommon_plugin_moc_files:%.moc.o=%.moc.cpp)
+
+
+CLEANFILES += $(libgraphwidgetcommon_plugin_moc_files)
+nodist_libgraphwidgetcommon_plugin_la_SOURCES = $(libgraphwidgetcommon_plugin_moc_files)
+
+$(libgraphwidgetcommon_plugin_moc_o):../src/GUI-qt/plugins/Graphwidget-common/%.moc.cpp: $(SRC_ROOT)src/GUI-qt/plugins/Graphwidget-common/%.h
+	@echo "Create moc file $@"
+	@$(MKDIR_P) ../src/GUI-qt/plugins/Graphwidget-common
+	@$(MOC) $(QT_CPPFLAGS) $(CUBELIB_INCLUDEPATH) $(GUI_INCLUDES) \
+        $(CUBE_DEBUG_FLAGS) $(DEFINE_TRACE_BROWSER) $< -o $@

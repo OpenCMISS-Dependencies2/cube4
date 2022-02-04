@@ -1,0 +1,37 @@
+#!/bin/bash
+##*************************************************************************##
+##  CUBE        http://www.scalasca.org/                                   ##
+##*************************************************************************##
+##  Copyright (c) 2020                                                     ##
+##  Forschungszentrum Juelich GmbH, Juelich Supercomputing Centre          ##
+##                                                                         ##
+##  This software may be modified and distributed under the terms of       ##
+##  a BSD-style license.  See the COPYING file in the package base         ##
+##  directory for details.                                                 ##
+##*************************************************************************##
+
+_cubegui_autocompl_script()
+{
+    local cur prev 
+    _docs_path_commands="@prefix@/share/doc/cubegui/guide"
+
+    _script_commands='-disable-plugins -docpath= -single -verbose -disable-calculation -expert -presentation -memory='
+    _memory_commands='preload lastN'
+
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+    if [[ ${cur} == = ]] ; then
+        if [[ ${prev} == -memory* ]] ; then
+        COMPREPLY=( $(compgen -W "${_memory_commands}" -- "") )
+        return 0
+        fi
+        if [[ ${prev} == -docpath* ]] ; then
+        COMPREPLY=( "$_docs_path_commands" )
+        return 0
+        fi
+    fi
+    COMPREPLY=( $(compgen -W "${_script_commands}" -- "${cur}") )
+}
+complete -o nospace -o dirnames -F _cubegui_autocompl_script cube

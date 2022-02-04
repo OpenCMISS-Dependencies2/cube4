@@ -1,0 +1,330 @@
+##*************************************************************************##
+##  CUBE        http://www.scalasca.org/                                   ##
+##*************************************************************************##
+##  Copyright (c) 1998-2020                                                ##
+##  Forschungszentrum Juelich GmbH, Juelich Supercomputing Centre          ##
+##                                                                         ##
+##  This software may be modified and distributed under the terms of       ##
+##  a BSD-style license.  See the COPYING file in the package base         ##
+##  directory for details.                                                 ##
+##*************************************************************************##
+
+
+## --------------- Advisor ( final ) ---------------------------
+
+cubeadvisor_plugindir = $(libdir)/cube-plugins
+cubeadvisor_plugin_LTLIBRARIES = cubeadvisor-plugin.la
+
+cubeadvisor_plugin_la_SOURCES = \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/Bar.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/Bar.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/CubeAdvice.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/CubeAdvisorPlugin.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/CubeAdvisorPlugin.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/CubeAdvisorProgress.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/CubeAdvisorProgress.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/CubeAdvisorTableWidgetItem.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/CubeAdvisorTableWidgetItem.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/CubeAdvisorToolBar.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/CubeAdvisorToolBar.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/CubeHelpButton.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/CubeHelpButton.h\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/CubeRatingWidget.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/CubeRatingWidget.h\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/CubeTestWidget.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/CubeTestWidget.h\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/PerformanceAnalysis.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/PerformanceAnalysis.h\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/JSCHybridAuditAnalysis.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/JSCHybridAuditAnalysis.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/tests/JSCHybridAmdahlTest.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/tests/JSCHybridAmdahlTest.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/tests/JSCHybridCommunicationEfficiencyTest.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/tests/JSCHybridCommunicationEfficiencyTest.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/tests/JSCHybridComputationTimeTest.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/tests/JSCHybridComputationTimeTest.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/tests/JSCHybridIPCTest.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/tests/JSCHybridIPCTest.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/tests/JSCHybridImbalanceTest.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/tests/JSCHybridImbalanceTest.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/tests/JSCHybridNoWaitINSTest.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/tests/JSCHybridNoWaitINSTest.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/tests/JSCHybridOMPImbalanceTest.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/tests/JSCHybridOMPImbalanceTest.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/tests/JSCHybridOMPSerialisationTest.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/tests/JSCHybridOMPSerialisationTest.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/tests/JSCHybridOMPTransferTest.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/tests/JSCHybridOMPTransferTest.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/tests/JSCHybridSerialisationTest.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/tests/JSCHybridSerialisationTest.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/tests/JSCHybridStalledResourcesTest.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/tests/JSCHybridStalledResourcesTest.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/tests/JSCHybridTransferTest.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/tests/JSCHybridTransferTest.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/knl/KnlMemoryAnalysis.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/knl/KnlMemoryAnalysis.h\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/knl/KnlVectorizationAnalysis.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/knl/KnlVectorizationAnalysis.h\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/knl/tests/KnlLLCMissTest.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/knl/tests/KnlLLCMissTest.h\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/knl/tests/KnlMemoryBandwidthTest.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/knl/tests/KnlMemoryBandwidthTest.h\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/knl/tests/KnlMemoryTransferTest.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/knl/tests/KnlMemoryTransferTest.h\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/knl/tests/L1CompToDataTest.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/knl/tests/L1CompToDataTest.h\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/knl/tests/L2CompToDataTest.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/knl/tests/L2CompToDataTest.h\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/knl/tests/VPUIntensityTest.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/knl/tests/VPUIntensityTest.h\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-audit/POPAuditAnalysis.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-audit/POPAuditAnalysis.h\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-audit/tests/POPCommunicationEfficiencyTest.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-audit/tests/POPCommunicationEfficiencyTest.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-audit/tests/POPComputationTimeTest.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-audit/tests/POPComputationTimeTest.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-audit/tests/POPIPCTest.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-audit/tests/POPIPCTest.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-audit/tests/POPImbalanceTest.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-audit/tests/POPImbalanceTest.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-audit/tests/POPNoWaitINSTest.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-audit/tests/POPNoWaitINSTest.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-audit/tests/POPParallelEfficiencyTest.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-audit/tests/POPParallelEfficiencyTest.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-audit/tests/POPSerialisationTest.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-audit/tests/POPSerialisationTest.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-audit/tests/POPStalledResourcesTest.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-audit/tests/POPStalledResourcesTest.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-audit/tests/POPTransferTest.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-audit/tests/POPTransferTest.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/POPHybridAuditAnalysisAdd.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/POPHybridAuditAnalysisAdd.h\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/tests/POPHybridAmdahlTestAdd.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/tests/POPHybridAmdahlTestAdd.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/tests/POPHybridCommunicationEfficiencyTestAdd.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/tests/POPHybridCommunicationEfficiencyTestAdd.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/tests/POPHybridComputationTimeTestAdd.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/tests/POPHybridComputationTimeTestAdd.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/tests/POPHybridIPCTestAdd.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/tests/POPHybridIPCTestAdd.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/tests/POPHybridImbalanceTestAdd.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/tests/POPHybridImbalanceTestAdd.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/tests/POPHybridNoWaitINSTestAdd.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/tests/POPHybridNoWaitINSTestAdd.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/tests/POPHybridOMPRegionEfficiencyTestAdd.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/tests/POPHybridOMPRegionEfficiencyTestAdd.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/tests/POPHybridParallelEfficiencyTestAdd.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/tests/POPHybridParallelEfficiencyTestAdd.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/tests/POPHybridProcessEfficiencyTestAdd.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/tests/POPHybridProcessEfficiencyTestAdd.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/tests/POPHybridSerialisationTestAdd.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/tests/POPHybridSerialisationTestAdd.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/tests/POPHybridStalledResourcesTestAdd.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/tests/POPHybridStalledResourcesTestAdd.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/tests/POPHybridThreadEfficiencyTestAdd.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/tests/POPHybridThreadEfficiencyTestAdd.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/tests/POPHybridTransferTestAdd.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/tests/POPHybridTransferTestAdd.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/BSPOPHybridAuditAnalysis.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/BSPOPHybridAuditAnalysis.h\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests/BSPOPHybridCommunicationEfficiencyTest.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests/BSPOPHybridCommunicationEfficiencyTest.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests/BSPOPHybridComputationTimeTest.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests/BSPOPHybridComputationTimeTest.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests/BSPOPHybridIPCTest.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests/BSPOPHybridIPCTest.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests/BSPOPHybridLoadBalanceTest.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests/BSPOPHybridLoadBalanceTest.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests/BSPOPHybridMPICommunicationEfficiencyTest.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests/BSPOPHybridMPICommunicationEfficiencyTest.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests/BSPOPHybridMPILoadBalanceTest.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests/BSPOPHybridMPILoadBalanceTest.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests/BSPOPHybridMPIParallelEfficiencyTest.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests/BSPOPHybridMPIParallelEfficiencyTest.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests/BSPOPHybridMPISerialisationTest.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests/BSPOPHybridMPISerialisationTest.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests/BSPOPHybridMPITransferTest.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests/BSPOPHybridMPITransferTest.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests/BSPOPHybridNoWaitINSTest.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests/BSPOPHybridNoWaitINSTest.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests/BSPOPHybridOMPCommunicationEfficiencyTest.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests/BSPOPHybridOMPCommunicationEfficiencyTest.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests/BSPOPHybridOMPLoadBalanceEfficiencyTest.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests/BSPOPHybridOMPLoadBalanceEfficiencyTest.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests/BSPOPHybridOMPParallelEfficiencyTest.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests/BSPOPHybridOMPParallelEfficiencyTest.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests/BSPOPHybridParallelEfficiencyTest.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests/BSPOPHybridParallelEfficiencyTest.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests/BSPOPHybridStalledResourcesTest.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests/BSPOPHybridStalledResourcesTest.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/POPHybridAuditAnalysis.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/POPHybridAuditAnalysis.h\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/tests/POPHybridAmdahlTest.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/tests/POPHybridAmdahlTest.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/tests/POPHybridCommunicationEfficiencyTest.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/tests/POPHybridCommunicationEfficiencyTest.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/tests/POPHybridComputationTimeTest.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/tests/POPHybridComputationTimeTest.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/tests/POPHybridIPCTest.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/tests/POPHybridIPCTest.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/tests/POPHybridImbalanceTest.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/tests/POPHybridImbalanceTest.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/tests/POPHybridNoWaitINSTest.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/tests/POPHybridNoWaitINSTest.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/tests/POPHybridOMPRegionEfficiencyTest.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/tests/POPHybridOMPRegionEfficiencyTest.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/tests/POPHybridParallelEfficiencyTest.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/tests/POPHybridParallelEfficiencyTest.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/tests/POPHybridProcessEfficiencyTest.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/tests/POPHybridProcessEfficiencyTest.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/tests/POPHybridSerialisationTest.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/tests/POPHybridSerialisationTest.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/tests/POPHybridStalledResourcesTest.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/tests/POPHybridStalledResourcesTest.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/tests/POPHybridThreadEfficiencyTest.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/tests/POPHybridThreadEfficiencyTest.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/tests/POPHybridTransferTest.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/tests/POPHybridTransferTest.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/tests/PerformanceTest.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/tests/PerformanceTest.h\
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/tests/PerformanceTest_incl.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Advisor/tests/PerformanceTest_incl.h
+
+cubeadvisor_plugin_la_LIBADD =  \
+    $(CUBELIB_LIBADD) \
+    libcube4gui.la 
+    
+cubeadvisor_plugin_la_LDFLAGS = $(QT_LDFLAGS) $(OPENMP_LDFLAGS) $(OPENMP_CXXFLAGS) $(SUBLIBS) $(QT_LIBS)  $(FRONTEND_LIBZ_LD) $(DBUS_LDFLAGS) $(CUBELIB_LDFLAGS)
+cubeadvisor_plugin_la_CXXFLAGS = $(AM_CXXFLAGS) $(CXXFLAGS_FOR_BUILD) $(OPENMP_CXXFLAGS) $(DBUS_CXXFLAGS) $(FRONTEND_LIBZ_HEADERS) \
+-I$(CUBE4_HEADERS_ROOT) $(QT_CXXFLAGS) $(QT_CPPFLAGS) -DCUBE_PREFIX='"$(prefix)"' $(CUBELIB_INCLUDEPATH) $(GUI_INCLUDES) \
+$(HMI_INSTRUMENTATION) $(CUBE_DEBUG_FLAGS)  
+cubeadvisor_plugin_la_CPPFLAGS = $(AM_CPPFLAGS) \
+                                -I. \
+                                -I$(INC_ROOT)src/GUI-qt/plugins/Advisor  \
+                                -I$(INC_ROOT)src/GUI-qt/plugins/Advisor/analyse\
+                                -I$(INC_ROOT)src/GUI-qt/plugins/Advisor/analyse/knl\
+                                -I$(INC_ROOT)src/GUI-qt/plugins/Advisor/analyse/knl/tests \
+                                -I$(INC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-audit\
+                                -I$(INC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-audit/tests \
+                                -I$(INC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit\
+                                -I$(INC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/tests \
+                                -I$(INC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs\
+                                -I$(INC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/tests \
+                                -I$(INC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive\
+                                -I$(INC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/tests \
+                                -I$(INC_ROOT)src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit\
+                                -I$(INC_ROOT)src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/tests \
+                                -I$(INC_ROOT)src/GUI-qt/plugins/Advisor/tests  
+
+
+cubeadvisor_plugin_la_LDFLAGS +=  
+cubeadvisor_plugin_la_LDFLAGS +=  -module -avoid-version -shared # don't generate static library and version number of shared library
+
+
+cubeadvisor_plugin_moc_files = \
+../src/GUI-qt/plugins/Advisor/CubeAdvisorPlugin.moc.cpp\
+../src/GUI-qt/plugins/Advisor/CubeAdvisorToolBar.moc.cpp\
+../src/GUI-qt/plugins/Advisor/CubeHelpButton.moc.cpp\
+../src/GUI-qt/plugins/Advisor/CubeRatingWidget.moc.cpp \
+../src/GUI-qt/plugins/Advisor/CubeTestWidget.moc.cpp 
+
+cubeadvisor_plugin_analysis_moc_files =\
+../src/GUI-qt/plugins/Advisor/analyse/PerformanceAnalysis.moc.cpp
+
+cubeadvisor_plugin_knl_moc_files = \
+../src/GUI-qt/plugins/Advisor/analyse/knl/KnlMemoryAnalysis.moc.cpp \
+../src/GUI-qt/plugins/Advisor/analyse/knl/KnlVectorizationAnalysis.moc.cpp
+
+cubeadvisor_plugin_pop_moc_files = \
+../src/GUI-qt/plugins/Advisor/analyse/pop-audit/POPAuditAnalysis.moc.cpp
+
+cubeadvisor_plugin_pop_hybrid_moc_files = \
+../src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/POPHybridAuditAnalysis.moc.cpp
+
+cubeadvisor_plugin_pop_hybrid_bs_moc_files = \
+../src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/BSPOPHybridAuditAnalysis.moc.cpp
+
+
+cubeadvisor_plugin_pop_hybrid_add_moc_files = \
+../src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/POPHybridAuditAnalysisAdd.moc.cpp
+
+
+
+cubeadvisor_plugin_jsc_hybrid_moc_files = \
+../src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/JSCHybridAuditAnalysis.moc.cpp
+
+
+cubeadvisor_plugin_moc_o=$(cubeadvisor_plugin_moc_files:%.moc.o=%.moc.cpp)
+cubeadvisor_plugin_analysis_moc_o=$(cubeadvisor_plugin_analysis_moc_files:%.moc.o=%.moc.cpp)
+cubeadvisor_plugin_knl_moc_o=$(cubeadvisor_plugin_knl_moc_files:%.moc.o=%.moc.cpp)
+cubeadvisor_plugin_pop_moc_o=$(cubeadvisor_plugin_pop_moc_files:%.moc.o=%.moc.cpp)
+cubeadvisor_plugin_pop_hybrid_moc_o=$(cubeadvisor_plugin_pop_hybrid_moc_files:%.moc.o=%.moc.cpp)
+cubeadvisor_plugin_pop_hybrid_bs_moc_o=$(cubeadvisor_plugin_pop_hybrid_bs_moc_files:%.moc.o=%.moc.cpp)
+cubeadvisor_plugin_pop_hybrid_add_moc_o=$(cubeadvisor_plugin_pop_hybrid_add_moc_files:%.moc.o=%.moc.cpp)
+cubeadvisor_plugin_jsc_hybrid_moc_o=$(cubeadvisor_plugin_jsc_hybrid_moc_files:%.moc.o=%.moc.cpp)
+
+CLEANFILES += $(cubeadvisor_plugin_moc_files) \
+		$(cubeadvisor_plugin_analysis_moc_o) \
+		$(cubeadvisor_plugin_knl_moc_files) \
+		$(cubeadvisor_plugin_pop_moc_files) \
+		$(cubeadvisor_plugin_pop_hybrid_moc_files) \
+		$(cubeadvisor_plugin_pop_hybrid_bs_moc_files) \
+		$(cubeadvisor_plugin_pop_hybrid_add_moc_files) \
+		$(cubeadvisor_plugin_jsc_hybrid_moc_files)
+		
+nodist_cubeadvisor_plugin_la_SOURCES =  $(cubeadvisor_plugin_moc_files) \
+					$(cubeadvisor_plugin_analysis_moc_files) \
+					$(cubeadvisor_plugin_knl_moc_files) \
+					$(cubeadvisor_plugin_pop_moc_files) \
+					$(cubeadvisor_plugin_pop_hybrid_moc_files) \
+					$(cubeadvisor_plugin_pop_hybrid_bs_moc_files) \
+					$(cubeadvisor_plugin_pop_hybrid_add_moc_files) \
+					$(cubeadvisor_plugin_jsc_hybrid_moc_files)
+
+$(cubeadvisor_plugin_moc_o):../src/GUI-qt/plugins/Advisor/%.moc.cpp: $(SRC_ROOT)src/GUI-qt/plugins/Advisor/%.h
+	@echo "Create moc file $@"
+	@$(MKDIR_P) ../src/GUI-qt/plugins/Advisor/
+	@$(MOC) $(QT_CPPFLAGS) $(CUBELIB_INCLUDEPATH) $(GUI_INCLUDES) \
+        $(CUBE_DEBUG_FLAGS) $(DEFINE_TRACE_BROWSER) $< -o $@
+
+$(cubeadvisor_plugin_analysis_moc_o):../src/GUI-qt/plugins/Advisor/analyse/%.moc.cpp: $(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/%.h
+	@echo "Create analysis moc file $@"
+	@$(MKDIR_P) ../src/GUI-qt/plugins/Advisor/analyse/
+	@$(MOC) $(QT_CPPFLAGS) $(CUBELIB_INCLUDEPATH) $(GUI_INCLUDES) \
+        $(CUBE_DEBUG_FLAGS) $(DEFINE_TRACE_BROWSER) $< -o $@
+
+$(cubeadvisor_plugin_knl_moc_o):../src/GUI-qt/plugins/Advisor/analyse/knl/%.moc.cpp: $(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/knl/%.h
+	@echo "Create knl moc file $@"
+	@$(MKDIR_P) ../src/GUI-qt/plugins/Advisor/analyse/knl/
+	@$(MOC) $(QT_CPPFLAGS) $(CUBELIB_INCLUDEPATH) $(GUI_INCLUDES) \
+        $(CUBE_DEBUG_FLAGS) $(DEFINE_TRACE_BROWSER) $< -o $@
+
+$(cubeadvisor_plugin_pop_moc_o):../src/GUI-qt/plugins/Advisor/analyse/pop-audit/%.moc.cpp: $(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-audit/%.h
+	@echo "Create pop moc file $@"
+	@$(MKDIR_P) ../src/GUI-qt/plugins/Advisor/analyse/pop-audit/
+	@$(MOC) $(QT_CPPFLAGS) $(CUBELIB_INCLUDEPATH) $(GUI_INCLUDES) \
+        $(CUBE_DEBUG_FLAGS) $(DEFINE_TRACE_BROWSER) $< -o $@
+
+$(cubeadvisor_plugin_pop_hybrid_moc_o):../src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/%.moc.cpp: $(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/%.h
+	@echo "Create pop hybrid moc file $@"
+	@$(MKDIR_P) ../src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit/
+	@$(MOC) $(QT_CPPFLAGS) $(CUBELIB_INCLUDEPATH) $(GUI_INCLUDES) \
+        $(CUBE_DEBUG_FLAGS) $(DEFINE_TRACE_BROWSER) $< -o $@
+
+$(cubeadvisor_plugin_pop_hybrid_bs_moc_o):../src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/%.moc.cpp: $(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/%.h
+	@echo "Create BS pop hybrid moc file $@"
+	@$(MKDIR_P) ../src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-bs/
+	@$(MOC) $(QT_CPPFLAGS) $(CUBELIB_INCLUDEPATH) $(GUI_INCLUDES) \
+        $(CUBE_DEBUG_FLAGS) $(DEFINE_TRACE_BROWSER) $< -o $@
+
+$(cubeadvisor_plugin_pop_hybrid_add_moc_o):../src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/%.moc.cpp: $(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/%.h
+	@echo "Create pop hybrid additive moc file $@"
+	@$(MKDIR_P) ../src/GUI-qt/plugins/Advisor/analyse/pop-hybrid-audit-additive/
+	@$(MOC) $(QT_CPPFLAGS) $(CUBELIB_INCLUDEPATH) $(GUI_INCLUDES) \
+        $(CUBE_DEBUG_FLAGS) $(DEFINE_TRACE_BROWSER) $< -o $@
+
+$(cubeadvisor_plugin_jsc_hybrid_moc_o):../src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/%.moc.cpp: $(SRC_ROOT)src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/%.h
+	@echo "Create jsc hybrid moc file $@"
+	@$(MKDIR_P) ../src/GUI-qt/plugins/Advisor/analyse/jsc-hybrid-audit/
+	@$(MOC) $(QT_CPPFLAGS) $(CUBELIB_INCLUDEPATH) $(GUI_INCLUDES) \
+        $(CUBE_DEBUG_FLAGS) $(DEFINE_TRACE_BROWSER) $< -o $@

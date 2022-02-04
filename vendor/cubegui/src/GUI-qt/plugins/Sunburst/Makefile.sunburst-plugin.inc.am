@@ -1,0 +1,88 @@
+##*************************************************************************##
+##  CUBE        http://www.scalasca.org/                                   ##
+##*************************************************************************##
+##  Copyright (c) 2017                                                     ##
+##  Forschungszentrum Juelich GmbH, Juelich Supercomputing Centre          ##
+##                                                                         ##
+##  This software may be modified and distributed under the terms of       ##
+##  a BSD-style license.  See the COPYING file in the package base         ##
+##  directory for details.                                                 ##
+##*************************************************************************##
+
+
+
+plugindir = $(libdir)/cube-plugins
+plugin_LTLIBRARIES = sysburst-plugin.la
+# sysburst_plugin_la_CPPFLAGS = $(AM_CPPFLAGS) @QT_CPPFLAGS@ @QT_DEFINES@ @CUBEGUI_CPPFLAGS@ @CUBELIB_CPPFLAGS@
+sysburst_plugin_la_CXXFLAGS = \
+			$(AM_CXXFLAGS) \
+			$(CXXFLAGS_FOR_BUILD) \
+			$(OPENMP_CXXFLAGS) \
+			$(DBUS_CXXFLAGS) \
+			$(FRONTEND_LIBZ_HEADERS) \
+			-I$(CUBE4_HEADERS_ROOT) \
+			$(QT_CXXFLAGS) \
+			$(QT_CPPFLAGS) \
+			-DCUBE_PREFIX='"$(prefix)"' \
+			$(CUBELIB_INCLUDEPATH) \
+			$(GUI_INCLUDES) \
+			$(CUBE_DEBUG_FLAGS) \
+			$(HMI_INSTRUMENTATION) \
+			-I.
+
+sysburst_plugin_la_LIBADD = \
+			$(CUBELIB_LIBADD)\
+			libcube4gui.la 
+			
+sysburst_plugin_la_LDFLAGS = \
+			$(QT_LDFLAGS) \
+			$(OPENMP_LDFLAGS) \
+			$(OPENMP_CXXFLAGS) \
+			$(SUBLIBS) \
+			$(QT_LIBS) \
+			$(FRONTEND_LIBZ_LD) \
+			$(DBUS_LDFLAGS) \
+			$(CUBELIB_LDFLAGS)
+			
+sysburst_plugin_la_SOURCES = \
+	$(SRC_ROOT)src/GUI-qt/plugins/Sunburst/DataAccessFunctions.cpp \
+	$(SRC_ROOT)src/GUI-qt/plugins/Sunburst/DataAccessFunctions.h \
+	$(SRC_ROOT)src/GUI-qt/plugins/Sunburst/InfoToolTip.cpp \
+	$(SRC_ROOT)src/GUI-qt/plugins/Sunburst/InfoToolTip.h \
+	$(SRC_ROOT)src/GUI-qt/plugins/Sunburst/SunburstCursorData.cpp \
+	$(SRC_ROOT)src/GUI-qt/plugins/Sunburst/SunburstCursorData.h \
+	$(SRC_ROOT)src/GUI-qt/plugins/Sunburst/SunburstPainter.cpp \
+	$(SRC_ROOT)src/GUI-qt/plugins/Sunburst/SunburstPainter.h \
+	$(SRC_ROOT)src/GUI-qt/plugins/Sunburst/SunburstSettingsHandler.cpp \
+	$(SRC_ROOT)src/GUI-qt/plugins/Sunburst/SunburstSettingsHandler.h \
+	$(SRC_ROOT)src/GUI-qt/plugins/Sunburst/SunburstShapeData.cpp \
+	$(SRC_ROOT)src/GUI-qt/plugins/Sunburst/SunburstShapeData.h \
+	$(SRC_ROOT)src/GUI-qt/plugins/Sunburst/SystemSunburstPlugin.cpp \
+	$(SRC_ROOT)src/GUI-qt/plugins/Sunburst/SystemSunburstPlugin.h \
+	$(SRC_ROOT)src/GUI-qt/plugins/Sunburst/TransformationData.cpp \
+	$(SRC_ROOT)src/GUI-qt/plugins/Sunburst/TransformationData.h \
+	$(SRC_ROOT)src/GUI-qt/plugins/Sunburst/UIEventWidget.cpp \
+	$(SRC_ROOT)src/GUI-qt/plugins/Sunburst/UIEventWidget.h 
+
+sysburst_plugin_la_LDFLAGS += $(AM_LDFLAGS) $(LIBOBJS) -module -avoid-version -shared
+
+
+sysburst_plugin_moc_files = \
+	../src/GUI-qt/plugins/Sunburst/SystemSunburstPlugin.moc.cpp \
+	../src/GUI-qt/plugins/Sunburst/UIEventWidget.moc.cpp
+
+sysburst_plugin_moc_o=$(sysburst_plugin_moc_files:%.moc.o=%.moc.cpp)
+
+# Remember to clean generated moc files
+CLEANFILES += $(sysburst_plugin_moc_files) 
+
+# Excluding generated moc files from distribution
+nodist_sysburst_plugin_la_SOURCES = $(sysburst_plugin_moc_files) 
+
+# Manual rule for creating the moc files
+$(sysburst_plugin_moc_files):../src/GUI-qt/plugins/Sunburst/%.moc.cpp: $(SRC_ROOT)src/GUI-qt/plugins/Sunburst/%.h
+	@echo "Create moc file $@"
+	@$(MKDIR_P) ../src/GUI-qt/plugins/Sunburst
+	@$(MOC) $(QT_CPPFLAGS) $(CUBELIB_INCLUDEPATH) $(GUI_INCLUDES) \
+        $(CUBE_DEBUG_FLAGS) $(DEFINE_TRACE_BROWSER) $< -o $@
+

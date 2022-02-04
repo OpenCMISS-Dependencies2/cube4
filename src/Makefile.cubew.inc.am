@@ -1,0 +1,30 @@
+##*************************************************************************##
+##  CUBE        http://www.scalasca.org/                                   ##
+##*************************************************************************##
+##  Copyright (c) 1998-2018                                                ##
+##  Forschungszentrum Juelich GmbH, Juelich Supercomputing Centre          ##
+##                                                                         ##
+##  This software may be modified and distributed under the terms of       ##
+##  a BSD-style license.  See the COPYING file in the package base         ##
+##  directory for details.                                                 ##
+##*************************************************************************##
+
+
+cubew_headersdir=${prefix}/include/cubew
+
+lib_LTLIBRARIES = libcubewriter4.la
+libcubewriter4_la_SOURCES =           \
+    $(SRC_ROOT)../src/cubew_cubew.c   \
+    $(SRC_ROOT)../src/cubew_cubew.h   
+libcubewriter4_la_CPPFLAGS =           \
+    -I$(srcdir)/../vendor/cubew/src/cubew \
+    -I$(srcdir)/../vendor/cubew/src \
+    -I$(abs_builddir)/../vendor/cubew/src/cubew \
+    -I$(abs_builddir)/../vendor/cubew/src 
+
+
+libcubewriter4_la_LDFLAGS = 
+
+dist_cubew_headers_HEADERS =                \
+    $(SRC_ROOT)../src/cubew_cubew.h       
+

@@ -1,0 +1,96 @@
+<!--
+/****************************************************************************
+**  CUBE        http://www.scalasca.org/                                   **
+*****************************************************************************
+**  Copyright (c) 1998-2020                                                **
+**  Forschungszentrum Juelich GmbH, Juelich Supercomputing Centre          **
+**                                                                         **
+**  This software may be modified and distributed under the terms of       **
+**  a BSD-style license.  See the COPYING file in the package base         **
+**  directory for details.                                                 **
+****************************************************************************/
+-->
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+    <file>../../share/i18n/cube_de.qm</file> 
+    <file>../../share/i18n/cube_fr.qm</file> 
+    <file>../../share/i18n/cube_it.qm</file> 
+    <file>../../share/i18n/cube_ja.qm</file> 
+    <file>../../share/i18n/cube_ru.qm</file>
+    <file>images/CubeIcon.png</file>    
+    <file>images/CubeIcon.xpm</file>
+    <file>images/CubeLogo.xpm</file> 
+    <file>images/CubeLogoAlpha.png</file>
+    <file>images/advisor-analyse-run.png</file>    
+    <file>images/advisor-icon.png</file>   
+    <file>images/advisor-metrics-copy.png</file>    
+    <file>images/barplot.png</file>    
+    <file>images/boxplot-icon.png</file>
+    <file>images/calltree_state.png</file>    
+    <file>images/counters.png</file>    
+    <file>images/distance1_small.png</file>
+    <file>images/distance2_small.png</file>
+    <file>images/down_small.png</file> 
+    <file>images/flattree_state.png</file>    
+    <file>images/folding_xy_small.png</file>    
+    <file>images/folding_xyz_small.png</file>    
+    <file>images/fromtextfile.png</file>  
+    <file>images/fzjlogo.xpm</file>
+    <file>images/heatmap.png</file>    
+    <file>images/iterations_small.png</file>    
+    <file>images/jump-arrow-small.png</file>       
+    <file>images/left_small.png</file>
+    <file>images/list-icon.png</file>
+    <file>images/metrictree_state.png</file>    
+    <file>images/mouse-left.png</file>    
+    <file>images/mouse-right.png</file>    
+    <file>images/mouse-wheel.png</file>    
+    <file>images/mouse.png</file>    
+    <file>images/noCheckPossible.png</file>    
+    <file>images/paste-icon.png</file>
+    <file>images/permissionForUpdate.png</file>  
+    <file>images/projection_xy_small.png</file>    
+    <file>images/projection_xyz_small.png</file>    
+    <file>images/recentVersion.png</file>
+    <file>images/recv_state.png</file>     
+    <file>images/recv_state_auto.png</file>    
+    <file>images/remapping.png</file>    
+    <file>images/reset_small.png</file>
+    <file>images/right_small.png</file>
+    <file>images/savetofile.png</file>
+    <file>images/scale_small.png</file>
+    <file>images/scorep-logo.png</file>    
+    <file>images/scorep-logo16.png</file>    
+    <file>images/scorep-logo32.png</file>    
+    <file>images/scorep-logo64.png</file>    
+    <file>images/scorepconfig.png</file>    
+    <file>images/send_state.png</file>    
+    <file>images/send_state_auto.png</file>    
+    <file>images/source.png</file> 
+    <file>images/split_small.png</file>    
+    <file>images/sunbursticon.png</file>   
+    <file>images/syntax_error.png</file>
+    <file>images/syntax_ok.png</file> 
+    <file>images/systemtree_state.png</file>    
+    <file>images/topology-icon.png</file>
+    <file>images/tree-icon.png</file>
+    <file>images/unused_hide_small.png</file>    
+    <file>images/unused_show_small.png</file>    
+    <file>images/up_small.png</file>
+    <file>images/updateAvailable.png</file>
+    <file>images/user_small.png</file>
+    <file>images/warning_small.png</file>   
+    <file>images/whatishelp.png</file>
+    <file>images/xrotate1_small.png</file>
+    <file>images/xrotate2_small.png</file>
+    <file>images/yrotate1_small.png</file>
+    <file>images/yrotate2_small.png</file>
+    <file>images/yx_small.png</file>
+    <file>images/yzx_small.png</file> 
+    <file>images/zoomin_small.png</file>
+    <file>images/zoomout_small.png</file>
+    <file>images/zrotate1_small.png</file>
+    <file>images/zrotate2_small.png</file>
+    <file>plugins/ScorePConfig/confvars.html</file> 
+</qresource>
+</RCC>

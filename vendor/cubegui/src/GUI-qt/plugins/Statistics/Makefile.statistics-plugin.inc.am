@@ -1,0 +1,48 @@
+##*************************************************************************##
+##  CUBE        http://www.scalasca.org/                                   ##
+##*************************************************************************##
+##  Copyright (c) 1998-2016                                                ##
+##  Forschungszentrum Juelich GmbH, Juelich Supercomputing Centre          ##
+##                                                                         ##
+##  This software may be modified and distributed under the terms of       ##
+##  a BSD-style license.  See the COPYING file in the package base         ##
+##  directory for details.                                                 ##
+##*************************************************************************##
+
+
+## --------------- CALLTREE ---------------------------
+
+statistic_plugindir = $(libdir)/cube-plugins
+statistic_plugin_LTLIBRARIES = statistic-plugin.la
+
+statistic_plugin_la_SOURCES = \
+$(SRC_ROOT)src/GUI-qt/plugins/Statistics/StatisticPlugin.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Statistics/StatisticPlugin.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Statistics/Statistics.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Statistics/Statistics.h 
+
+statistic_plugin_la_LIBADD =  \
+    $(CUBELIB_LIBADD)\
+    libcube4gui.la 
+statistic_plugin_la_LDFLAGS = $(QT_LDFLAGS) $(OPENMP_LDFLAGS) $(OPENMP_CXXFLAGS) $(SUBLIBS) $(QT_LIBS)  $(FRONTEND_LIBZ_LD) $(DBUS_LDFLAGS) $(CUBELIB_LDFLAGS)
+statistic_plugin_la_CXXFLAGS = $(AM_CXXFLAGS) $(CXXFLAGS_FOR_BUILD) $(OPENMP_CXXFLAGS) $(DBUS_CXXFLAGS) $(FRONTEND_LIBZ_HEADERS) \
+-I$(CUBE4_HEADERS_ROOT) $(QT_CXXFLAGS) $(QT_CPPFLAGS) -DCUBE_PREFIX='"$(prefix)"' $(CUBELIB_INCLUDEPATH) \
+$(CUBE_DEBUG_FLAGS) $(GUI_INCLUDES) $(HMI_INSTRUMENTATION) -I.
+
+statistic_plugin_la_LDFLAGS += -module -avoid-version -shared # don't generate static library and version number of shared library
+
+
+statistic_plugin_moc_files = \
+../src/GUI-qt/plugins/Statistics/StatisticPlugin.moc.cpp
+
+statistic_plugin_moc_o=$(statistic_plugin_moc_files:%.moc.o=%.moc.cpp)
+
+CLEANFILES += $(statistic_plugin_moc_files)
+nodist_statistic_plugin_la_SOURCES = $(statistic_plugin_moc_files)
+
+$(statistic_plugin_moc_o):../src/GUI-qt/plugins/Statistics/%.moc.cpp: $(SRC_ROOT)src/GUI-qt/plugins/Statistics/%.h
+	@echo "Create moc file $@"
+	@$(MKDIR_P) ../src/GUI-qt/plugins/Statistics
+	@$(MOC) $(QT_CPPFLAGS) $(CUBELIB_INCLUDEPATH) \
+        $(CUBE_DEBUG_FLAGS) $(GUI_INCLUDES) $(DEFINE_TRACE_BROWSER) $< -o $@
+

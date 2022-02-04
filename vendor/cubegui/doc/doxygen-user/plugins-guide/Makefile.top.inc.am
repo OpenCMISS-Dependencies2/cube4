@@ -1,0 +1,142 @@
+##*************************************************************************##
+##  CUBE        http://www.scalasca.org/                                   ##
+##*************************************************************************##
+##  Copyright (c) 1998-2019                                                ##
+##  Forschungszentrum Juelich GmbH, Juelich Supercomputing Centre          ##
+##                                                                         ##
+##  Copyright (c) 2009-2015                                                ##
+##  German Research School for Simulation Sciences GmbH,                   ##
+##  Laboratory for Parallel Programming                                    ##
+##                                                                         ##
+##  This software may be modified and distributed under the terms of       ##
+##  a BSD-style license.  See the COPYING file in the package base         ##
+##  directory for details.                                                 ##
+##*************************************************************************##
+
+
+## Convenience variable
+DOXYGEN_PLUGINS_GUIDE_SRC = $(SRC_ROOT)doc/doxygen-user/plugins-guide
+
+
+##--- Extra distribution files ----------------------------------------------
+
+EXTRA_DIST += \
+	$(DOXYGEN_PLUGINS_GUIDE_SRC)/mainpage.dox \
+	$(DOXYGEN_PLUGINS_GUIDE_SRC)/userguide.dox \
+	$(DOXYGEN_PLUGINS_GUIDE_SRC)/footer.tex \
+	$(DOXYGEN_PLUGINS_GUIDE_SRC)/title.tex \
+	$(DOXYGEN_PLUGINS_GUIDE_SRC)/attention.tex \
+	$(DOXYGEN_PLUGINS_GUIDE_SRC)/doxygen-layout.xml \
+	$(DOXYGEN_PLUGINS_GUIDE_SRC)/images/context_free.png \
+	$(DOXYGEN_PLUGINS_GUIDE_SRC)/images/cube_plugin.png
+
+
+##--- Doxygen-related targets -----------------------------------------------
+
+if HAVE_DOXYGEN
+
+PLUGINS_GUIDE_COVERS = \
+    $(USER_DOC_DIR)/doxygen-user/plugins-guide/frontcover.pdf \
+    $(abs_srcdir)/doc/doxygen-user/plugins-guide/frontcover.pdf \
+    $(abs_srcdir)/doc/doxygen-common/draftcover.pdf
+
+PHONY_TARGETS += \
+    doxygen-plugins-guide \
+    doxygen-plugins-guide-pack \
+    doxygen-plugins-guide-cover
+
+doxygen-plugins-guide: doc/doxygen-user-at-make-time.cfg \
+		doc/doxygen-user/plugins-guide/doxygen-plugins-guide.cfg \
+		doc/doxygen-common/doxygen-common.cfg
+	@$(MKDIR_P) $(USER_DOC_DIR)/plugins-guide/html
+	
+#       create latex-only doxygen config file (remove source of api classes)
+	cp doc/doxygen-user/plugins-guide/doxygen-plugins-guide.cfg doc/doxygen-user/plugins-guide/doxygen-plugins-guide.cfg.orig
+	grep -v '# HTML_ONLY_LINE' doc/doxygen-user/plugins-guide/doxygen-plugins-guide.cfg.orig > doc/doxygen-user/plugins-guide/doxygen-plugins-guide.cfg
+	$(AM_V_GEN)$(DOXYGEN) doc/doxygen-user/plugins-guide/doxygen-plugins-guide.cfg
+	set -e; \
+	if test -d $(USER_DOC_DIR)/plugins-guide/latex; then \
+	    for cover in $(PLUGINS_GUIDE_COVERS); do \
+	        if test -f $$cover; then \
+	            $(INSTALL_DATA) $$cover \
+	                            $(USER_DOC_DIR)/plugins-guide/latex/frontcover.pdf; \
+	            break; \
+	        fi \
+	    done; \
+	    cd $(USER_DOC_DIR)/plugins-guide/latex \
+		&& sed -e '/\\chapter{Cube G\\+U\\+I Plugin User Guide}/{N;d;}' \
+	               -e '/\\chapter{copyright}/{N;N;d;}' \
+	               refman.tex > xx.sed \
+	        && mv xx.sed refman.tex \
+	        && cat $(abs_srcdir)/doc/doxygen-user/plugins-guide/attention.tex >> license.tex \
+	        && $(MAKE) \
+	        && mv refman.pdf ../../CubePluginsUserGuide.pdf \
+	        && cd .. \
+	        && rm -rf latex; \
+	fi
+	
+#       create html-only doxygen config file 
+	mv doc/doxygen-user/plugins-guide/doxygen-plugins-guide.cfg.orig doc/doxygen-user/plugins-guide/doxygen-plugins-guide.cfg
+	sed 's/namespace cubegui/namespace cubepluginapi/' $(abs_srcdir)/src/GUI-qt/display/Constants.h > tmp.sed \
+	     && mv tmp.sed $(abs_builddir)/doc/Constants.h 
+	sed 's/namespace cubegui/namespace cubepluginapi/' $(abs_srcdir)/src/GUI-qt/display/SettingsHandler.h > tmp.sed \
+	     && mv tmp.sed $(abs_builddir)/doc/SettingsHandler.h 
+	$(AM_V_GEN)$(DOXYGEN) doc/doxygen-user/plugins-guide/doxygen-plugins-guide.cfg
+	
+
+doxygen-plugins-guide-pack: doxygen-plugins-guide
+	set -e; \
+	cd $(USER_DOC_DIR); \
+	    tar czvf plugins-guide-html.tar.gz plugins-guide/html; \
+	    rm -rf plugins-guide; rm $(abs_builddir)/doc/Constants.h $(abs_builddir)/doc/SettingsHandler.h; 
+
+endif HAVE_DOXYGEN
+
+
+##--- Cover generation ------------------------------------------------------
+
+if HAVE_DOXYGEN_LATEX
+
+if GIT_CONTROLLED
+
+PLUGINS_GUIDE_COVER_FILES = \
+    $(abs_builddir)/doc/doxygen-common/config.tex \
+    $(abs_srcdir)/doc/doxygen-user/plugins-guide/title.tex \
+    $(abs_srcdir)/doc/doxygen-common/imgsrc/frontcover.tex \
+    $(abs_srcdir)/doc/doxygen-common/imgsrc/backcover.tex \
+    $(abs_srcdir)/doc/doxygen-common/imgsrc/FZJ_LogoInvert.pdf \
+    $(abs_srcdir)/doc/doxygen-common/imgsrc/CubeLogo.pdf \
+    $(abs_builddir)/doc/doxygen-common/imgsrc/corporate.tex
+
+
+doxygen-plugins-guide-cover:
+	$(MKDIR_P) $(USER_DOC_DIR)/doxygen-user/plugins-guide/cover
+	set -e; \
+	cd $(USER_DOC_DIR)/doxygen-user/plugins-guide/cover; \
+	    for file in $(PLUGINS_GUIDE_COVER_FILES); do \
+	        cp $$file . ; \
+	    done; \
+	    pdflatex frontcover.tex; \
+	    pdflatex frontcover.tex; \
+	    mv frontcover.pdf ../frontcover.pdf; \
+	    pdflatex backcover.tex; \
+	    pdflatex backcover.tex; \
+	    mv backcover.pdf ../backcover.pdf; \
+	    cd ..; \
+	    rm -rf cover
+
+else !GIT_CONTROLLED
+
+doxygen-plugins-guide-cover:
+	$(MKDIR_P) $(USER_DOC_DIR)/doxygen-user/plugins-guide
+	$(INSTALL_DATA) $(abs_srcdir)/$(DOXYGEN_PLUGINS_GUIDE_SRC)/frontcover.pdf \
+	                $(USER_DOC_DIR)/doxygen-user/plugins-guide
+
+endif !GIT_CONTROLLED
+
+else !HAVE_DOXYGEN_LATEX
+
+# Nothing to do in this case...
+doxygen-plugins-guide-cover:
+
+endif !HAVE_DOXYGEN_LATEX

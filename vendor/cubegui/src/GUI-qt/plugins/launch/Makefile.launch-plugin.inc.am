@@ -1,0 +1,56 @@
+##*************************************************************************##
+##  CUBE        http://www.scalasca.org/                                   ##
+##*************************************************************************##
+##  Copyright (c) 1998-2016                                                ##
+##  Forschungszentrum Juelich GmbH, Juelich Supercomputing Centre          ##
+##                                                                         ##
+##  This software may be modified and distributed under the terms of       ##
+##  a BSD-style license.  See the COPYING file in the package base         ##
+##  directory for details.                                                 ##
+##*************************************************************************##
+
+
+## --------------- CALLTREE ---------------------------
+
+launch_plugindir = $(libdir)/cube-plugins
+launch_plugin_LTLIBRARIES = launch-plugin.la
+
+launch_plugin_la_SOURCES = \
+$(SRC_ROOT)src/GUI-qt/plugins/launch/Launch.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/launch/Launch.h \
+$(SRC_ROOT)src/GUI-qt/plugins/launch/LaunchInfo.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/launch/LaunchInfo.h \
+$(SRC_ROOT)src/GUI-qt/plugins/launch/LaunchPlugin.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/launch/LaunchPlugin.h 
+
+launch_plugin_la_LIBADD = \
+    $(CUBELIB_LIBADD)\
+    libcube4gui.la 
+launch_plugin_la_LDFLAGS = $(QT_LDFLAGS) $(OPENMP_LDFLAGS) $(OPENMP_CXXFLAGS) $(SUBLIBS) $(QT_LIBS)  $(FRONTEND_LIBZ_LD) $(DBUS_LDFLAGS) $(CUBELIB_LDFLAGS)
+launch_plugin_la_CXXFLAGS = $(AM_CXXFLAGS) $(CXXFLAGS_FOR_BUILD) $(OPENMP_CXXFLAGS) $(DBUS_CXXFLAGS) $(FRONTEND_LIBZ_HEADERS) \
+-I$(CUBE4_HEADERS_ROOT) $(QT_CXXFLAGS) $(QT_CPPFLAGS) -DCUBE_PREFIX='"$(prefix)"' $(CUBELIB_INCLUDEPATH) \
+$(CUBE_DEBUG_FLAGS) $(GUI_INCLUDES) \
+$(HMI_INSTRUMENTATION) \
+-I.
+
+launch_plugin_la_LDFLAGS += -module -avoid-version -shared # don't generate static library and version number of shared library
+
+launch_plugin_moc_files = \
+../src/GUI-qt/plugins/launch/Launch.moc.cpp \
+../src/GUI-qt/plugins/launch/LaunchInfo.moc.cpp \
+../src/GUI-qt/plugins/launch/LaunchPlugin.moc.cpp
+
+launch_plugin_moc_o=$(launch_plugin_moc_files:%.moc.o=%.moc.cpp)
+
+
+
+CLEANFILES += $(launch_plugin_moc_files)
+nodist_launch_plugin_la_SOURCES = $(launch_plugin_moc_files)
+
+
+$(launch_plugin_moc_o): ../src/GUI-qt/plugins/launch/%.moc.cpp: $(SRC_ROOT)src/GUI-qt/plugins/launch/%.h
+	@echo "Create moc file $@"
+	@$(MKDIR_P) ../src/GUI-qt/plugins/launch
+	@$(MOC) $(QT_CPPFLAGS) $(CUBELIB_INCLUDEPATH) \
+        $(CUBE_DEBUG_FLAGS) $(GUI_INCLUDES) $(DEFINE_TRACE_BROWSER) $< -o $@
+

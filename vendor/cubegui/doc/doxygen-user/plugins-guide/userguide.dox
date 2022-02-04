@@ -1,0 +1,462 @@
+/****************************************************************************
+**  CUBE        http://www.scalasca.org/                                   **
+*****************************************************************************
+**  Copyright (c) 1998-2021                                                **
+**  Forschungszentrum Juelich GmbH, Juelich Supercomputing Centre          **
+**                                                                         **
+**  Copyright (c) 2009-2013                                                **
+**  German Research School for Simulation Sciences GmbH,                   **
+**  Laboratory for Parallel Programming                                    **
+**                                                                         **
+**  This software may be modified and distributed under the terms of       **
+**  a BSD-style license.  See the COPYING file in the package base         **
+**  directory for details.                                                 **
+****************************************************************************/
+
+
+/**
+
+@page abstract Abstract 
+<small>
+The version 4 of \cube implementation provides support of varios types of Plugins. 
+
+This Guide helps an user to develop an additional standalone plugin which 
+can be used within \cube.
+</small>
+
+*/
+
+/** @page cube-plugins-types Cube Plugin Types
+
+\cube supports two types of plugins
+ - Context sensitive general Plugin 
+ - Context free plugin
+
+@section cubePlugin Context sensitive Cube Plugins
+Plugins that derive from CubePlugin depend on a loaded cube file. They can react on user actions,
+e.g. tree item selection, and may insert a context menu or add a new tab next to the tree views.
+Examples for this type of plugins are the System Topology Plugin or the Statistics Plugin which
+are part of the Cube installation.
+@img{cube_plugin.png,cube_plugins,plugin menu,scale=0.35}
+
+\latexonly
+\vspace*{-15mm}
+\enlargethispage{20mm}
+\endlatexonly
+
+@section contextFree Context Free Plugins
+Plugins that derive from ContextFreePlugin are only active if no cube file is loaded. 
+These plugins create or modify Cube objects, which can be loaded and displayed. 
+
+
+@img{context_free.png,context_free_plugins,context free plugin menu,scale=0.4}
+
+*/
+
+/** @page cube-example Step by step example for CubePlugin
+
+The following sections describe the steps that are required to create a plugin. For simplicity, 
+a separate project is created and the generated binary will to be copied to the plugin directory
+of the given cube installation.
+
+Files of the simple cube plugin project:
+<ul>
+<li> @srcref{example-simple.pro.in}
+<li> @srcref{SimpleExample.h}
+<li> @srcref{SimpleExample.cpp}
+</ul>
+
+@section example-source Qt project file
+To create a cube plugin, a makefile and source files have to be 
+generated. The makefile can be generated automatically from a Qt project file
+
+First we specify the path to the "cube-config" script of the cube installation. 
+This script delivers correct flags for compiling and linking.
+
+\dontinclude example-simple.pro.in
+\skipline CUBE_
+\until TARGET
+
+qmake && make will build the first plugin example libExamplePluginSimple.so. The plugin will be
+copied to the plugin directory, e.g. /opt/cube/lib64/plugins.
+
+@section cube-example-source-header SimpleExample.h
+ 
+The example describes a minimal cube plugin, which is inserted as an additional tab
+next to the SystemTree. It shows the text of the recently selected tree item.
+The complete source of the example can be found in 
+<tt>$CUBE_INSTALL_PREFIX/share/doc/cube/example/gui/plugin-example</tt>.
+
+Every cube plugin has to derive from @apiref{cubepluginapi::CubePlugin}. To use Qt's signal and
+slot mechanism it also has to derive from QObject. 
+If the plugin should be added as a tab next to a tree widget, it has to derive from 
+@apiref{cubegui::TabInterface}.
+
+\dontinclude SimpleExample.h
+\skipline class SimpleExample
+
+The class header is followed by the following macro definitions:
+
+<ul>
+<li><tt>Q_OBJECT</tt> is required to handle signals and slots. 
+
+<li><tt>Q_INTERFACES( cubepluginapi::CubePlugin )</tt> tells Qt that the class implements the CubePlugin interface 
+and generates the method <tt>qt_metacast(char*)</tt> to cast the plugin object to CubePlugin 
+using the class name given as as character array.
+
+<li>For Qt versions >= 5.0 the plugin has to be exported using the <tt>Q_PLUGIN_METADATA()</tt> 
+macro. The unique plugin name "SimpleExamplePlugin" is assigned.
+For Qt versions < 5.0, <tt>Q_EXPORT_PLUGIN2</tt> has be be used 
+(see Section \ref cube-example-source).
+</ul>
+
+\dontinclude SimpleExample.h
+\skipline class SimpleExample
+\until endif
+
+The class SimpleExample has to implement the pure virtual methods from @apiref{cubepluginapi::CubePlugin} 
+and @apiref{cubegui::TabInterface}.
+
+\skip public:
+\until widget();
+
+
+
+@section cube-example-source SimpleExample.cpp
+
+@srcref{SimpleExample.cpp}
+ 
+For Qt versions < 5.0, <tt>Q_EXPORT_PLUGIN2</tt> is used to export the plugin. The first argument
+is a unique name for the plugin, the second the name of the class.
+
+\dontinclude SimpleExample.cpp
+\skipline using
+\until #endif
+
+
+The function <tt>cubeOpened(PluginServices* service)</tt> is the starting point of our plugin.
+Allocation of data and GUI objects should be done here, not in the constructor. This allows to
+free the resources, if the plugin is deactivated.
+
+Here we create the main widget, which should be added as a system tab. Our plugin derives
+from TabInterface, so <tt>service->addTab(SYSTEMTAB, this)</tt> can be called.
+
+If the user selects a tree item, service will emit a corresponding signal. To 
+react on this event, the signal has to be connected to the slot <tt>treeItemIsSelected()</tt>
+of our plugin class. 
+
+The function returns true, if the plugin should be started. It it returns false,
+the plugin is closed and deleted.
+
+The function <tt>cubeClosed()</tt> is called if the cube file is closed or if the plugin is
+unloaded by the user. All resources which have been allocated in <tt>cubeOpened</tt> have 
+to be deleted here.
+
+\skipline bool
+\skipline ::cubeOpened
+\until cubeClosed
+\until }
+
+Each plugin has to set a version number. If several plugins with the same identifier 
+(see function <tt>name()</tt>) exist, the one with the highest version number will be loaded.
+\skipline void
+\skipline ::version
+\until }
+
+This function returns the unique plugin name. Only one plugin with this name
+will be loaded.
+\skipline QString
+\skipline ::name
+\until }
+
+The following function returns a text to describe the plugin. It will be used by help menu of 
+the cube GUI.
+\skipline QString
+\skipline ::getHelpText
+\until }
+
+The following two functions contain the implementation of TabInterface. 
+
+The function <tt>widget()</tt> returns the QWidget that will be placed into the tab, which has
+been created with <tt>service->addTab</tt> in <tt>initialize()</tt>.
+\skipline QWidget
+\skipline ::widget
+\until }
+
+The function <tt>label()</tt> returns the label of the new tab.
+\skipline QString
+\skipline ::label
+\until }
+
+
+This method is a slot, which is called if a tree item is selected. The argument provides information about the selected item. 
+With item->getDisplayType(), the location (METRIC, CALL, SYSTEM) can be identified.
+\skipline void
+\skipline ::treeItemIsSelected
+\until }
+
+
+*/
+
+
+
+
+
+
+
+/** @page contextFreeExample Step by step example for ContextFreePlugin
+
+The following sections describe the steps that are required to create a plugin which derives from
+ContextFreePlugin. For simplicity, a separate project is created and the generated binary 
+will to be copied to the plugin directory of the given cube installation.
+
+@section contextFreeExample-source Qt project file
+To create a cube plugins, a makefile and source files have to be 
+generated. The makefile can be generated automatically from a Qt project file
+
+First we specify the path to the "cube-config" script of the cube installation. 
+This script delivers correct flags for compiling and linking.
+
+\dontinclude context-free.pro.in
+\skipline CUBEGUI
+\until TARGET
+
+qmake && make will build the first plugin example libContextFreeExamplePlugin.so. The plugin will be
+copied to the plugin directory, e.g. /opt/cube/lib64/plugins.
+
+@section cube-contextFreeExample-source-header ContextFreePluginExample.h
+ 
+The example \ref ContextFreePluginExample.h describes a minimal context free plugin. The plugin becames active, if Cube is
+started without an input file, or if the cube file is closed.
+
+The complete source of the example can be found in 
+<tt>$CUBE_INSTALL_PREFIX/share/doc/cube/example/gui/context-free</tt>.
+
+A context free plugin has to derive from ContextFreePlugin. To use Qt's signal and
+slot mechanism it also has to derive from QObject. 
+
+\dontinclude ContextFreePluginExample.h
+\skipline class ContextFree
+
+The class header is followed by the following macro definitions:
+
+<ul>
+<li><tt>Q_OBJECT</tt> is required to handle signals and slots. 
+
+<li><tt>Q_INTERFACES( ContextFreePlugin )</tt> tells Qt that the class implements the 
+ContextFreePlugin interface 
+and generates the method <tt>qt_metacast(char*)</tt> to cast the plugin object to ContextFreePlugin 
+using the class name given as as character array.
+
+<li>For Qt versions >= 5.0 the plugin has to be exported using the <tt>Q_PLUGIN_METADATA()</tt> 
+macro. The unique plugin name "ContextFreePlugin" is assigned.
+For Qt versions < 5.0, <tt>Q_EXPORT_PLUGIN2</tt> has be be used 
+(see Section \ref cube-example-source2).
+</ul>
+
+
+\dontinclude ContextFreePluginExample.h
+\skipline class ContextFree
+\until endif
+
+The class ContextFreePluginExample has to implement all pure virtual methods from ContextFreePlugin. 
+
+\skipline public
+\until private
+
+@section cube-example-source2 ContextFreeExample.cpp
+
+\ref ContextFreePluginExample.cpp <br>
+For Qt versions < 5.0, <tt>Q_EXPORT_PLUGIN2</tt> is used to export the plugin. The first argument
+is a unique name for the plugin, the second the name of the plugin class.
+
+\dontinclude ContextFreePluginExample.cpp
+\skipline using
+\until endif
+
+The function <tt>opened(ContextFreeServices* service)</tt> is the starting point of our plugin.
+With <tt>service->getWidget()</tt> we get a widget on Cube's main screen, in which we can place the GUI 
+elements of our plugin. In this example, only one button will be placed on the main screen. 
+Activation of this button will call the slot function <tt>startAction()</tt>.
+
+\skipline void
+\skipline ::opened
+\until }
+
+
+The function <tt>closed()</tt> is called if the plugin gets inactive because a cube file is loaded 
+or the Cube GUI is closed.
+All resources which have been allocated in <tt>opened()</tt> have to be deleted here.
+\dontinclude ContextFreePluginExample.cpp
+\skipline void
+\skipline ::closed
+\until }
+
+This function is called, if the user clicks on the Button "Load cube file".  Usually, a context free
+plugin will create cube data. In this small example, it simply loads the cube file which is 
+choosen from a file dialog.
+
+\dontinclude ContextFreePluginExample.cpp
+\skipline void
+\skipline ::startAction
+\until }
+
+Each plugin has to set a version number. If several plugins with the same identifier 
+(see function <tt>name()</tt>) exist, the one with the highest version number will be loaded.
+\dontinclude ContextFreePluginExample.cpp
+\skipline void
+\skipline ::version
+\until }
+
+This function returns the unique plugin name. Only one plugin with this name
+will be loaded.
+\dontinclude ContextFreePluginExample.cpp
+\skipline QString
+\skipline ::name
+\until }
+
+The following function returns a text to describe the plugin. It will be used by help menu of 
+the cube GUI.
+\dontinclude ContextFreePluginExample.cpp
+\skipline QString
+\skipline ::getHelpText
+\until }
+
+
+
+*/
+
+
+
+/** @page developingPlugins Developing plugins 
+@section examples Further examples
+@subsection demoPluginExample Extensive example
+The example in
+<tt>$CUBE_INSTALL_PREFIX/share/doc/cube/example/gui/plugin</tt> uses all major functions
+of PluginServices. It contains functions to handle
+<ul>
+<li>settings, global preferences e.g. number formats
+<li>further tab functions
+<li>selections
+<li>menus, context menus and toolbars
+<li>global values to communicate with other plugins
+</ul>
+@see cubepluginapi::PluginServices<br>
+@srcref{DemoPlugin.h} <br>
+@srcref{DemoPlugin.cpp} <br>
+@srcref{demo-plugin.pro.in}
+
+@subsection valueViewExample ValueView example
+<tt>$CUBE_INSTALL_PREFIX/share/doc/cube/example/gui/value-view</tt> is an example of a plugin that offers an additional
+value view. It adds a boxplot view for tau metrics. The example 
+<ul>
+<li>implements @apiref{cubepluginapi::ValueView} and replaces the colored box with a boxplot
+<li>adds a user dialog which allows the user to change the icon size
+<li>implements @apiref{cubepluginapi::SettingsHandler} to save the icon size settings 
+</ul>
+@see cubepluginapi::PluginServices<br>
+@srcref{TauValueView.h} <br>
+@srcref{TauValueView.cpp} <br>
+@srcref{tau-value.pro.in}
+
+@section error-detection Problems loading plugins
+If the plugin doesn't load, start cube with <tt>-verbose</tt> to get further information.
+The most likely reason is an undefined reference:
+@code
+plugin /opt/cube/lib64/cube-plugins/libSimpleExamplePlugin.so is not a valid 
+    CubePlugin version cubeplugin/1.1
+Cannot load library /opt/cube/lib64/cube-plugins/libSimpleExamplePlugin.so: 
+    (undefined symbol: _ZN13SimpleExample10cubeClosedEv)
+@endcode
+If we remove the definition of the method <tt>cubeClosed()</tt> in SimpleExample.cpp, the plugin is created without errors, but it 
+cannot be loaded. <tt>cube -verbose</tt> shows the error message above.
+
+When building plugins, it is important to ensure that the plugin is configured in the same way as cube.
+A plugin build with incompatible options shows the following error:
+@code
+Plugin verification data mismatch in '/opt/cube/lib64/cube-plugins/libSimpleExamplePlugin.so'
+@endcode
+The same compiler, the same Qt library and the same configuration options have to be used. Only plugins which are created using a Qt
+library with a lower minor version can also be loaded.
+
+
+
+
+@page pluginAPI Usage of the Cube Plugin API
+The class cubepluginapi::PluginServices is used by the plugins to interact with the cube GUI. This Chapter will provide an overview
+about the most important functions.
+@section pluginOutput Functions to show information provided by the plugin 
+
+@subsection tabs Add a new Tab next to the System tree
+To add one ore more tabs next to the system tree, the plugin has to call @apiref{cubepluginapi::PluginServices::addTab}.  This function
+requires a cubegui::TabInterface as parameter. The tab has to define a label and a widget.
+See @ref cube-example for a simple demo.
+
+@subsection contextMenu Add a context menu to a tree view
+A context menu is shown, if the user clicks with the right mouse button on a tree. With @apiref{cubepluginapi::PluginServices::addContextMenuItem},
+the plugin can add a menu item to the context menu.
+
+@subsection toolbar Create a toolbar
+Cube provides toolbars, if they are enabled ( e.g. Preferences, Synchronisation).
+A plugin may create additional toolbars with @apiref{cubepluginapi::PluginServices::addToolBar}. A toolbar may be assigned to a tab. In this case, 
+the toolbar is only visible, if the tab is also visible. If the tab gets detached, the toolbar will be moved to the new window.
+
+@subsection shortcuts Define a shortcut
+Shortcuts can be defined with QAction::setShortcut. To ensure that the plugin shortcuts don't interfere with the default shortcuts,
+the context should be set using QAction::setShortcutContext( Qt::WidgetWithChildrenShortcut ).
+
+@subsection colormap Create an additional colormap
+The colormap plugin example (@srcref{ColorMapPlugin.h}, @srcref{ColorMapPlugin.cpp}) demonstrates how to use
+@apiref{cubepluginapi::PluginServices::addColorMap}
+
+@subsection valueView Create an alternative value view
+The default value view shows a colored square next to the numerical value.
+The function @apiref{cubepluginapi::PluginServices::addValueView} adds the given value view to the list of available views from which the user
+can choose the active one. 
+See @ref valueViewExample for an example implementation.
+
+@subsection addMetric Add a metric to the metric tree
+To add a new metric to the metric tree, call @apiref{cubepluginapi::PluginServices::addMetric}.
+
+@subsection addMarker Add a marker to a tree
+A plugin may define one or more tree item marker to tag items of interest.
+
+Tree items are marked in different ways:
+<ul>
+  <li>Items with a colored background show that a plugin has set a marker
+  <li>Items with a colored frame indicate that a collapsed child has been marked.
+  <li>Items with a black frame indicate that there are several collapsed children with different marker.
+  <li>Items with a dotted frame show a dependency. A marked item of the right neighbor tree depends on
+  <li>Items can be grayed out. These items are either marked as unimportant by a plugin, or the user has choosen to gray out all items,
+  for which no marker is set.
+  this item. The dependent item is only marked, if the dotted item is selected.
+</ul>
+To create a new marker, @apiref{cubepluginapi::PluginServices::getTreeItemMarker} has to be called. Then, the marker cann be added in two
+different ways:
+<ul>
+ <li>for one TreeItem<br>
+  @apiref{cubepluginapi::PluginServices::addMarker(TreeItem *item, const TreeItemMarker *marker, bool isDependency)}
+ <li> for a set of dependent items<br>
+  @apiref{cubepluginapi::PluginServices::addMarker(const TreeItemMarker *marker, TreeItem *metric, TreeItem *call, TreeItem *system)}
+</ul>
+
+See @ref demoPluginExample for an example implementation.
+  
+@subsection message Add a status message
+  To write a message to the status line at the bottom of the cube window, call @apiref{cubepluginapi::PluginServices::setMessage}.
+
+  
+@section parallelExecution Parallel execution of compute-intensive tasks
+The API function @apiref{cubepluginapi::PluginServices::createFuture( TabInterface* tab = 0 )} creates a Future object to
+execute a task in parallel. The Future object is deleted after the plugin has been closed.
+If a TabInterface is given, a progress bar will be displayed in the given tab while the tasks are running.
+
+The parallel plugin example (@srcref{ParallelPlugin.h}, @srcref{ParallelPlugin.cpp}) demonstrates how to use
+@apiref{cubepluginapi::Future}
+
+ 
+  
+*/
+
+
+

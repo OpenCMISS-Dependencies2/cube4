@@ -1,0 +1,129 @@
+Name: Cube GUI
+Version: 4.6
+    - Support of Qt6
+    - Added task call tree.
+    - Implemented undo operation for call tree modifications.
+    - Fixed dependencies of reroot/prune operation.
+    - Info displays attributes of all tree elements.
+    - Value widget uses selected stylesheets as well.
+    - Metric Editor supports creation of non-rowwise metrics.
+    - Provide a command line autocompletion script.
+    - Usage of QWebEngine is optional.
+    - Usage of QConcurrent is optional.
+    - One can disable usage of the parallel calculation during the configure step.
+    - Plugin "Advisor" supports hybrid POP2 assesments.
+    - UserGuide and Advisor documentation works under MacOs as well.
+    - Various bug fixes in GUI.
+
+Version: 4.5
+    - Changed configure option --with-cubelib-config to --with-cubelib to streamline with Score-P and Scalasca.
+    - Added support for parallel calculation of tree items
+    - Added Bookmark toolbar to save state of loaded cube file
+    - Added support for i18n (no translations yet). 
+    - Added "Scaling" plugin for a simple scaling studies (works best with JengaFett plugin).
+    - Added client-server capability (works with server included with CubeLib 4.5).
+    - Plugins can define own category for the system tree tab and place own windows under this category.
+    - Additional system tree sort option
+    - Extended System Topology Visualization Plugin.
+    - Improved handling for 1-dimensional topologies.
+    - Various bug fixes in GUI.
+    
+Version: 4.4.4
+    - Require C++11 for build.
+    - Improved detection of Qt modules.
+    - Display attributes in Info Widget. 
+    - Do not reset zoom level in System Topology Plugin.
+    - Various bug fixes in GUI.
+
+Version: 4.4.3
+    - Fixed diplay of mangled function names.
+    - Added a context menu option "Expand next level".
+    - Fixed refresh issue if plugin is detached.
+    - Added an "expert" mode to display hidden ghost metrics in the Metrics pane.
+    - Improved Qt detection.
+    - Fixed emission of signals to plugins while multiple selection of elements.
+    - Various bug fixes in GUI.
+
+Version: 4.4.2
+    - Improved "Find" functionality.
+    - Improved automatic region display in the "Source Code viewer".
+    - Fixed serious performance problem if remote X is used.
+    
+Version: 4.4.1
+    - Improved GUI performance for large call trees. Show the number of call tree references in flat tree info.
+      Switching between flat and call tree may cause the selection of a large amount of items in the call tree. This will
+      be extremly slow, if more than 10.000 items are selected. The number of expanded and selected items is now limited, the 
+      items are marked instead and can be selected afterwards with context menu item "select marked".
+    - 'Edit metric' is not disabled anymore, if creation of derived metric was cancelled.
+    - Copy selected flat tree values as they are shown in the tree.
+    - Renamed configure option --with-debug to --enable-debug to be more consistent with its semantic.
+    - Fixed seg fault while selection "Info" for some not-root metric.
+    - Provide context information about STN for info window.
+    - Made check for updates to comply with the requirements of data privacy rules.
+    - Info widget now shows additional information about flat tree items. 
+      If info context menu item is called for system tree items, the info widget is created and detached 
+      and the information is shown in a third panel.
+    - Improved shortening heuristic.
+    - CUBE_DOCPATH accepts urls for the lookup for the online documentation.
+    - Show context free plugins at startup.
+    - Various bug fixes in GUI.
+
+Version: 4.4
+    - Various performance improvements.
+    - Allow an automatic demangling of region names if possible.
+    - Improved "Help" display:
+      -- use QWebgEngine of Qt if available;
+      -- display "User Guide";
+      -- display help files for the plugins if available.
+    - Improved diplay of such unis as "bytes" or "occurences". Added a human readable format.
+    - Improved "Heatmap" and "Barplot" plugins to display variable number of iterations.
+    - Improved "Info" display:
+      -- display metrics information;
+      -- display region information;
+      -- display Online Metric Description;
+      -- display Region Help.
+    - Improved "Source Code viewer":
+      -- implemented as a plugin;
+      -- display line numbers;
+      -- store local path to a source tree if .cubex was moved and 
+         adjust it on-the-fly;
+      -- automaticaly display a proper source if another call path or region selected;
+    - Improved Plugin tabs organization:
+      -- define plugins as a "System View" or "Other";
+      -- allow to close plugin if not needed.
+    - Provide "Diff", "Merge" and "Mean" as a context free plugin in GUI.
+    - Added "Metric Identification" plugin for comfortable identification of a source of the metric, 
+      such as Score-P, Scalasca or Remapper.
+    - Added "Sunburst" as a standard system tree visualization plugin.
+    - Provide a "metric creation" plugin for the comfortable derived metrics creation:
+      -- improved drop-down suggestions;
+      -- improved syntax highlight.
+    - Improved display of the tree item values:
+      -- one can provide a plugin for customized display;
+      -- provide own visualization plugins for Tau Metrics Values;
+      -- added an example for value visualization plugin.
+    - Improved sorting behaviour in GUI.
+    - Introduce "important" - "normal - "not important" property of marker.
+    - Allow to detach plugin tabs into a new window. A context menu to detach a tab
+      appears if right mouse is clicked on a tab. If a detached window is
+      closed, it is re-added to the tab bar. 
+    - Multiple selection of derived metrics is not possible.
+    - Using ScoreP for GUI and Library instrumentation for the automatic performance benchmarking.
+    - Manual initialization of a plugin after GUI start is possible.
+    - Extended marker API.
+    - Plugin can define an icon as a marker.
+    - Improved automatic CubePL keyword suggestion while creation of a derived metric.
+    - Improved plugins search strategy.
+    - Added support for multiple plugin search directories, via env variable and via GUI setting.
+    - Allow to specify colors of the selected item in the tree panel of a Cube GUI.
+    - Source code viewer allows search within the displayed text..
+    - Enhanced the start windows of the Cube GUI..
+    - Report used Qt version in the "About" dialog of a GUI.
+    - Improved the Qt detection steps while the configure time.
+    - Using ScoreP for GUI and Library instrumentation for the automatic performance benchmarking.
+    - Manual initialization of a plugin after GUI start is possible.
+    - Extended marker API.
+    - Plugin can define an icon as a marker.
+    - Improved automatic CubePL keyword suggestion while creation of a derived metric.
+    - Improved plugins search strategy.
+    - Various bug fixes in GUI.

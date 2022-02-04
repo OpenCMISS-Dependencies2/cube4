@@ -1,0 +1,48 @@
+##*************************************************************************##
+##  CUBE        http://www.scalasca.org/                                   ##
+##*************************************************************************##
+##  Copyright (c) 1998-2016                                                ##
+##  Forschungszentrum Juelich GmbH, Juelich Supercomputing Centre          ##
+##                                                                         ##
+##  This software may be modified and distributed under the terms of       ##
+##  a BSD-style license.  See the COPYING file in the package base         ##
+##  directory for details.                                                 ##
+##*************************************************************************##
+
+
+## --------------- CALLTREE ---------------------------
+CUBE4_GUI_QT_PLUGINS_ADVANCEDCOLORMAPS_INC_MAPS=$(INC_ROOT)src/GUI-qt/plugins/AdvancedColorMaps/maps
+
+
+
+libadvancedcm_plugin_la_SOURCES += \
+$(srcdir)/../src/GUI-qt/plugins/AdvancedColorMaps/maps/CubehelixColorMap.cpp \
+$(srcdir)/../src/GUI-qt/plugins/AdvancedColorMaps/maps/CubehelixColorMap.h	\
+$(srcdir)/../src/GUI-qt/plugins/AdvancedColorMaps/maps/DivergentColorMap.cpp \
+$(srcdir)/../src/GUI-qt/plugins/AdvancedColorMaps/maps/DivergentColorMap.h	\
+$(srcdir)/../src/GUI-qt/plugins/AdvancedColorMaps/maps/ImprovedRainbowColorMap.cpp \
+$(srcdir)/../src/GUI-qt/plugins/AdvancedColorMaps/maps/ImprovedRainbowColorMap.h \
+$(srcdir)/../src/GUI-qt/plugins/AdvancedColorMaps/maps/SequentialColorMap.cpp \
+$(srcdir)/../src/GUI-qt/plugins/AdvancedColorMaps/maps/SequentialColorMap.h	
+
+libadvancedcm_plugin_la_CXXFLAGS += -I$(CUBE4_GUI_QT_PLUGINS_ADVANCEDCOLORMAPS_INC_MAPS) $(CUBELIB_INCLUDEPATH) \
+        $(CUBE_DEBUG_FLAGS) \
+	$(HMI_INSTRUMENTATION) 
+
+libadvancedcm_plugin_maps_moc_files = \
+../src/GUI-qt/plugins/AdvancedColorMaps/maps/CubehelixColorMap.moc.cpp \
+../src/GUI-qt/plugins/AdvancedColorMaps/maps/DivergentColorMap.moc.cpp \
+../src/GUI-qt/plugins/AdvancedColorMaps/maps/ImprovedRainbowColorMap.moc.cpp \
+../src/GUI-qt/plugins/AdvancedColorMaps/maps/SequentialColorMap.moc.cpp 
+
+CLEANFILES += $(libadvancedcm_plugin_maps_moc_files)
+nodist_libadvancedcm_plugin_la_SOURCES += $(libadvancedcm_plugin_maps_moc_files)
+
+libadvancedcm_plugin_maps_moc_o=$(libadvancedcm_plugin_maps_moc_files:%.moc.o=%.moc.cpp)
+
+$(libadvancedcm_plugin_maps_moc_o):../src/GUI-qt/plugins/AdvancedColorMaps/maps/%.moc.cpp: $(SRC_ROOT)src/GUI-qt/plugins/AdvancedColorMaps/maps/%.h
+	@echo "Create moc file $@"
+	@$(MKDIR_P) ../src/GUI-qt/plugins/AdvancedColorMaps/maps
+	@$(MOC) $(QT_CPPFLAGS) $(CUBELIB_INCLUDEPATH) \
+        $(CUBE_DEBUG_FLAGS) $(GUI_INCLUDES) $(DEFINE_TRACE_BROWSER) $< -o $@
+

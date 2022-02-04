@@ -1,0 +1,61 @@
+##*************************************************************************##
+##  CUBE        http://www.scalasca.org/                                   ##
+##*************************************************************************##
+##  Copyright (c) 1998-2019                                                ##
+##  Forschungszentrum Juelich GmbH, Juelich Supercomputing Centre          ##
+##                                                                         ##
+##  This software may be modified and distributed under the terms of       ##
+##  a BSD-style license.  See the COPYING file in the package base         ##
+##  directory for details.                                                 ##
+##*************************************************************************##
+
+
+EXAMPLE_PLUGIN_SIMPLE_ = \
+$(srcdir)/../examples/GUI/plugins/simple/SimpleExample.cpp \
+$(srcdir)/../examples/GUI/plugins/simple/SimpleExample.h 
+EXAMPLE_PLUGIN_DEMO_ = \
+$(srcdir)/../examples/GUI/plugins/demo/DemoPlugin.cpp \
+$(srcdir)/../examples/GUI/plugins/demo/DemoPlugin.h \
+$(srcdir)/../examples/GUI/plugins/demo/demo-plugin.qrc\
+$(srcdir)/../examples/GUI/plugins/demo/icon.png 
+EXAMPLE_PLUGIN_PARALLEL_ = \
+$(srcdir)/../examples/GUI/plugins/parallel/ParallelPlugin.cpp \
+$(srcdir)/../examples/GUI/plugins/parallel/ParallelPlugin.h 
+EXAMPLE_PLUGIN_COLOR_ = \
+$(srcdir)/../examples/GUI/plugins/colormap/ColorMapPlugin.cpp \
+$(srcdir)/../examples/GUI/plugins/colormap/ColorMapPlugin.h
+EXAMPLE_PLUGIN_CONTEXTFREE_ = \
+$(srcdir)/../examples/GUI/plugins/context-free/ContextFreePluginExample.cpp \
+$(srcdir)/../examples/GUI/plugins/context-free/ContextFreePluginExample.h
+EXAMPLE_PLUGIN_VALUEVIEW_ = \
+$(srcdir)/../examples/GUI/plugins/value-view/TauValueView.cpp \
+$(srcdir)/../examples/GUI/plugins/value-view/TauValueView.h 
+
+EXAMPLE_PLUGIN_SIMPLE = $(EXAMPLE_PLUGIN_SIMPLE_) ../examples/GUI/plugins/simple/example-simple.pro
+EXAMPLE_PLUGIN_DEMO = $(EXAMPLE_PLUGIN_DEMO_) ../examples/GUI/plugins/demo/demo-plugin.pro
+EXAMPLE_PLUGIN_COLOR = $(EXAMPLE_PLUGIN_COLOR_) ../examples/GUI/plugins/colormap/colormap.pro
+EXAMPLE_PLUGIN_CONTEXTFREE = $(EXAMPLE_PLUGIN_CONTEXTFREE_) ../examples/GUI/plugins/context-free/context-free.pro
+EXAMPLE_PLUGIN_VALUEVIEW = $(EXAMPLE_PLUGIN_VALUEVIEW_) ../examples/GUI/plugins/value-view/tau-value.pro
+EXAMPLE_PLUGIN_PARALLEL = $(EXAMPLE_PLUGIN_PARALLEL_) ../examples/GUI/plugins/parallel/parallel-example.pro
+EXAMPLE_PLUGIN_SIMPLE_IN = $(EXAMPLE_PLUGIN_SIMPLE_) $(srcdir)/../examples/GUI/plugins/simple/example-simple.pro.in
+EXAMPLE_PLUGIN_DEMO_IN = $(EXAMPLE_PLUGIN_DEMO_) $(srcdir)/../examples/GUI/plugins/demo/demo-plugin.pro.in
+EXAMPLE_PLUGIN_COLOR_IN = $(EXAMPLE_PLUGIN_COLOR_) $(srcdir)/../examples/GUI/plugins/colormap/colormap.pro.in
+EXAMPLE_PLUGIN_CONTEXTFREE_IN = $(EXAMPLE_PLUGIN_CONTEXTFREE_) $(srcdir)/../examples/GUI/plugins/context-free/context-free.pro.in
+EXAMPLE_PLUGIN_VALUEVIEW_IN = $(EXAMPLE_PLUGIN_VALUEVIEW_) $(srcdir)/../examples/GUI/plugins/value-view/tau-value.pro.in
+EXAMPLE_PLUGIN_PARALLEL_IN = $(EXAMPLE_PLUGIN_PARALLEL_) $(srcdir)/../examples/GUI/plugins/parallel/parallel-example.pro.in
+
+EXAMPLE_CUBE_FILES = \
+$(srcdir)/../examples/GUI/summary.cubex \
+$(srcdir)/../examples/GUI/trace.cubex
+
+
+
+
+EXTRA_DIST += $(EXAMPLE_PLUGIN_SIMPLE_IN) \
+              $(EXAMPLE_PLUGIN_DEMO_IN) \
+              $(EXAMPLE_PLUGIN_PARALLEL_IN) \
+              $(EXAMPLE_PLUGIN_COLOR_IN) \
+              $(EXAMPLE_PLUGIN_CONTEXTFREE_IN) \
+              $(EXAMPLE_PLUGIN_VALUEVIEW_IN) \
+              $(EXAMPLE_CUBE_FILES)
+

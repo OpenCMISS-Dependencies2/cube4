@@ -1,0 +1,1212 @@
+<dl>
+ <dt>@anchor SCOREP_ENABLE_PROFILING<tt>SCOREP_ENABLE_PROFILING</tt></dt>
+ <dd>
+   <p>Enable profiling</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Boolean</dd>
+   <dt>Default:</dt><dd>true</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_ENABLE_TRACING<tt>SCOREP_ENABLE_TRACING</tt></dt>
+ <dd>
+   <p>Enable tracing</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Boolean</dd>
+   <dt>Default:</dt><dd>false</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_ENABLE_UNWINDING<tt>SCOREP_ENABLE_UNWINDING</tt></dt>
+ <dd>
+   <p>Enables recording calling context information for every event</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Boolean</dd>
+   <dt>Default:</dt><dd>false</dd>
+  </dl>
+  
+  <p>The calling context is the call chain of functions to the current position in
+  the running program. This call chain will also be annotated with source code
+  information if possible.<br/>
+  This is a prerequisite for sampling but also works with instrumented
+  applications.<br/>
+  Note that when tracing is also enabled, Score-P does not write the usual
+  Enter/Leave records into the OTF2 trace, but new records.<br/>
+  See also SCOREP_TRACING_CONVERT_CALLING_CONTEXT_EVENTS.<br/>
+  Note also that this supresses events from the compiler instrumentation.</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_VERBOSE<tt>SCOREP_VERBOSE</tt></dt>
+ <dd>
+   <p>Be verbose</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Boolean</dd>
+   <dt>Default:</dt><dd>false</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_TOTAL_MEMORY<tt>SCOREP_TOTAL_MEMORY</tt></dt>
+ <dd>
+   <p>Total memory in bytes per process to be consumed by the
+               measurement system</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Number with size suffixes</dd>
+   <dt>Default:</dt><dd>16000k</dd>
+  </dl>
+  
+  <p>SCOREP_TOTAL_MEMORY will be split into pages of size SCOREP_PAGE_SIZE
+  (potentially reduced to a multiple of SCOREP_PAGE_SIZE). Maximum size is 4
+  GBminus one SCOREP_PAGE_SIZE.</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_PAGE_SIZE<tt>SCOREP_PAGE_SIZE</tt></dt>
+ <dd>
+   <p>Memory page size in bytes</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Number with size suffixes</dd>
+   <dt>Default:</dt><dd>8k</dd>
+  </dl>
+  
+  <p>If not a power of two, SCOREP_PAGE_SIZE will be increased to the next larger
+  power of two. SCOREP_TOTAL_MEMORY will be split up into pages of (the
+  adjusted) SCOREP_PAGE_SIZE. Minimum size is 512 bytes.</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_EXPERIMENT_DIRECTORY<tt>SCOREP_EXPERIMENT_DIRECTORY</tt></dt>
+ <dd>
+   <p>Name of the experiment directory as child of the current working
+               directory</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Path</dd>
+   <dt>Default:</dt><dd>&quot;&quot;</dd>
+  </dl>
+  
+  <p>The experiment directory is created directly under the current working
+  directory. No parent directories will be created. The experiment directory is
+  only created if it is requested by at least one substrate. When no experiment
+  name is given (the default) Score-P names the experiment directory
+  `scorep-measurement-tmp' and renames this after a successful measurement to a
+  generated name based on the current time.</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY<tt>SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY</tt></dt>
+ <dd>
+   <p>Overwrite an existing experiment directory</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Boolean</dd>
+   <dt>Default:</dt><dd>true</dd>
+  </dl>
+  
+  <p>If you specified a specific experiment directory name, but this name is
+  already given, you can force overwriting it with this flag. The previous
+  experiment directory will be renamed.</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_MACHINE_NAME<tt>SCOREP_MACHINE_NAME</tt></dt>
+ <dd>
+   <p>The machine name used in profile and trace output</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>String</dd>
+   <dt>Default:</dt><dd>&quot;Linux&quot;</dd>
+  </dl>
+  
+  <p>We suggest using a unique name, e.g., the fully qualified domain name. The
+  default machine name was set at configure time (see the INSTALL file for
+  customization options).</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_EXECUTABLE<tt>SCOREP_EXECUTABLE</tt></dt>
+ <dd>
+   <p>Executable of the application</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Path</dd>
+   <dt>Default:</dt><dd>&quot;&quot;</dd>
+  </dl>
+  
+  <p>File name, preferably with full path, of the application's executable. This is
+  a fallback if Score-P cannot determine the exetuable's name automatically. The
+  name is required by some compiler adapters. They will complain if this
+  environment variable is needed.</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_ENABLE_SYSTEM_TREE_SEQUENCE_DEFINITIONS<tt>SCOREP_ENABLE_SYSTEM_TREE_SEQUENCE_DEFINITIONS</tt></dt>
+ <dd>
+   <p>Use system tree sequence definitions</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Boolean</dd>
+   <dt>Default:</dt><dd>false</dd>
+  </dl>
+  
+  <p>Enables an internal system tree representation that specifies a sequence of
+  system tree nodes with one record instead of creating one record per system
+  tree node, location group or location. It is more scalable and has less memory
+  requirements than single-node records. However, it costs inidividual names of
+  nodes, but simply enumerates them based on types. Currently, system tree
+  sequence definitions support only MPI (and trivially single-process)
+  applications.</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_FORCE_CFG_FILES<tt>SCOREP_FORCE_CFG_FILES</tt></dt>
+ <dd>
+   <p>Force the creation of experiment directory and configuration
+               files</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Boolean</dd>
+   <dt>Default:</dt><dd>true</dd>
+  </dl>
+  
+  <p>If this is set to 'true' (which is the default), the experiment directory will
+  be created along with some configuration files, even if no substrate writes
+  data (i.e., profiling and tracing are disabled and no substrate plugin
+  registered for writing).<br/>
+  If this is set to 'false', the directory will only be created if any substrate
+  actually writes data.</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_TIMER<tt>SCOREP_TIMER</tt></dt>
+ <dd>
+   <p>Timer used during measurement</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Option</dd>
+   <dt>Default:</dt><dd>tsc</dd>
+  </dl>
+  
+  <p>The following timers are available for this installation:</p>
+  <dl>
+    <dt>tsc</dt>
+    <dd>
+
+      <p>Low overhead time stamp counter (X86_64) timer.</p>
+    </dd>
+    <dt>gettimeofday</dt>
+    <dd>
+
+      <p>gettimeofday timer.</p>
+    </dd>
+    <dt>clock_gettime</dt>
+    <dd>
+
+      <p>clock_gettime timer with CLOCK_MONOTONIC_RAW as clock.</p>
+    </dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_NM_SYMBOLS<tt>SCOREP_NM_SYMBOLS</tt></dt>
+ <dd>
+   <p>Application's symbol table obtained via 'nm -l' for compiler
+               instrumentation</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Path</dd>
+   <dt>Default:</dt><dd>&quot;&quot;</dd>
+  </dl>
+  
+  <p>File name, preferably with full path, of <file> that contains the
+  <application>'s symbol table that was obtained by the command:</p>
+<p><br/>
+  $ nm -l <application> 2> /dev/null > <file></p>
+<p><br/>
+  Only needed if generating the file at measurement initialization time fails,
+  e.g., if using the 'system()' command from the compute nodes isn't possible.</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_PROFILING_TASK_EXCHANGE_NUM<tt>SCOREP_PROFILING_TASK_EXCHANGE_NUM</tt></dt>
+ <dd>
+   <p>Number of foreign task objects that are collected before they are
+               put into the common task object exchange buffer</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Number with size suffixes</dd>
+   <dt>Default:</dt><dd>1K</dd>
+  </dl>
+  
+  <p>The profiling creates a record for every task instance that is running. To
+  avoid locking, the required memory is taken from a preallocated memory block.
+  Each thread has its own memory block. On task completion, the created object
+  can be reused by other tasks. However, if tasks migrate, the data structure
+  migrates with them. Thus, if there is an imbalance in the migration from a
+  source thread that starts the execution of tasks towards a sink thread that
+  completes the tasks, the source thread may continually creating new task
+  objects while in the sink, released task objects are collected. Thus, if the
+  sink collected a certain number of tasks it should trigger a backflow of its
+  collected task objects. However, this requires locking which should be avoided
+  as much as possible. Thus, we do not want the locking to happen on every
+  migrated task, but only if a certain imbalance occurs. This environment
+  variable determines the number of migrated task instances that must be
+  collected before the backflow is triggered.</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_PROFILING_MAX_CALLPATH_DEPTH<tt>SCOREP_PROFILING_MAX_CALLPATH_DEPTH</tt></dt>
+ <dd>
+   <p>Maximum depth of the calltree</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Number</dd>
+   <dt>Default:</dt><dd>30</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_PROFILING_BASE_NAME<tt>SCOREP_PROFILING_BASE_NAME</tt></dt>
+ <dd>
+   <p>Base for construction of the profile filename</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>String</dd>
+   <dt>Default:</dt><dd>&quot;profile&quot;</dd>
+  </dl>
+  
+  <p>String which is used as based to create the filenames for the profile files.</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_PROFILING_FORMAT<tt>SCOREP_PROFILING_FORMAT</tt></dt>
+ <dd>
+   <p>Profile output format</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Option</dd>
+   <dt>Default:</dt><dd>default</dd>
+  </dl>
+  
+  <p>Sets the output format for the profile.</p>
+<p><br/>
+  The following formats are supported:</p>
+  <dl>
+    <dt>none</dt>
+    <dd>
+
+      <p>No profile output. This does not disable profile recording.</p>
+    </dd>
+    <dt>tau_snapshot</dt>
+    <dd>
+
+      <p>Tau snapshot format.</p>
+    </dd>
+    <dt>cube4</dt>
+    <dd>
+
+      <p>Stores the sum for every metric per callpath per location in Cube4 format.</p>
+    </dd>
+    <dt>cube_tuple</dt>
+    <dd>
+
+      <p>Stores an extended set of statistics in Cube4 format.</p>
+    </dd>
+    <dt>thread_sum</dt>
+    <dd>
+
+      <p>Sums all locations within a location group and stores the data in Cube4
+      format.</p>
+    </dd>
+    <dt>thread_tuple</dt>
+    <dd>
+
+      <p>Sums all locations within a location group and store in addition some
+      statistical data about the distribution among the location of a location
+      group.</p>
+    </dd>
+    <dt>key_threads</dt>
+    <dd>
+
+      <p>Stores the initial location, the slowest location and the fastest location
+      per process. Sums all other locations within a location group. The result
+      is stored in Cube4 format.</p>
+    </dd>
+    <dt>cluster_threads</dt>
+    <dd>
+
+      <p>Clusters locations within a location group if they have the same calltree
+      structure. Sums locations within a cluster. Stores the result in Cube4
+      format.</p>
+    </dd>
+    <dt>default</dt>
+    <dd>
+
+      <p>Default format. If Cube4 is supported, Cube4 is the default else the Tau
+      snapshot format is default.</p>
+    </dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_PROFILING_ENABLE_CLUSTERING<tt>SCOREP_PROFILING_ENABLE_CLUSTERING</tt></dt>
+ <dd>
+   <p>Enable clustering</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Boolean</dd>
+   <dt>Default:</dt><dd>true</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_PROFILING_CLUSTER_COUNT<tt>SCOREP_PROFILING_CLUSTER_COUNT</tt></dt>
+ <dd>
+   <p>Maximum cluster count for iteration clustering</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Number with size suffixes</dd>
+   <dt>Default:</dt><dd>64</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_PROFILING_CLUSTERING_MODE<tt>SCOREP_PROFILING_CLUSTERING_MODE</tt></dt>
+ <dd>
+   <p>Specifies the level of strictness when comparing call trees for
+               equivalence</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Option</dd>
+   <dt>Default:</dt><dd>subtree</dd>
+  </dl>
+  
+  <p>Possible levels:</p>
+  <dl>
+    <dt>none/0</dt>
+    <dd>
+
+      <p>No structural similarity required.</p>
+    </dd>
+    <dt>subtree/1</dt>
+    <dd>
+
+      <p>The sub-trees structure must match.</p>
+    </dd>
+    <dt>subtree_visits/2</dt>
+    <dd>
+
+      <p>The sub-trees structure and the number of visits must match.</p>
+    </dd>
+    <dt>mpi/3</dt>
+    <dd>
+
+      <p>The structure of the call-path to MPI calls must match.<br/>
+      Nodes that are not on an MPI call-path may differ.</p>
+    </dd>
+    <dt>mpi_visits/4</dt>
+    <dd>
+
+      <p>Like above, but the number of visits of the MPI calls must match, too.</p>
+    </dd>
+    <dt>mpi_visits_all/5</dt>
+    <dd>
+
+      <p>Like above, but the number of visits must match also match on all nodes on
+      the call-path to an MPI function.</p>
+    </dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_PROFILING_CLUSTERED_REGION<tt>SCOREP_PROFILING_CLUSTERED_REGION</tt></dt>
+ <dd>
+   <p>Name of the clustered region</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>String</dd>
+   <dt>Default:</dt><dd>&quot;&quot;</dd>
+  </dl>
+  
+  <p>The clustering can only cluster one dynamic region. If more than one dynamic
+  region are defined by the user, the region is clustered which is exited first.
+  If another region should be clustered instead you can specify the region name
+  in this variable. If the variable is unset or empty, the first exited dynamic
+  region is clustered.</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_PROFILING_ENABLE_CORE_FILES<tt>SCOREP_PROFILING_ENABLE_CORE_FILES</tt></dt>
+ <dd>
+   <p>Write .core files if an error occurred</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Boolean</dd>
+   <dt>Default:</dt><dd>false</dd>
+  </dl>
+  
+  <p>If an error occurs inside the profiling system, the profiling is disabled. For
+  debugging reasons, it might be feasible to get the state of the local stack at
+  these points. It is not recommended to enable this feature for large scale
+  measurements.</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_TRACING_USE_SION<tt>SCOREP_TRACING_USE_SION</tt></dt>
+ <dd>
+   <p>Whether or not to use libsion as OTF2 substrate</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Boolean</dd>
+   <dt>Default:</dt><dd>false</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_TRACING_MAX_PROCS_PER_SION_FILE<tt>SCOREP_TRACING_MAX_PROCS_PER_SION_FILE</tt></dt>
+ <dd>
+   <p>Maximum number of processes that share one sion file (must be
+               >&nbsp;0)</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Number with size suffixes</dd>
+   <dt>Default:</dt><dd>1K</dd>
+  </dl>
+  
+  <p>All processes are than evenly distributed over the number of needed files to
+  fulfill this constraint. E.g., having 4 processes and setting the maximum to 3
+  would result in 2 files each holding 2 processes.</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_TRACING_CONVERT_CALLING_CONTEXT_EVENTS<tt>SCOREP_TRACING_CONVERT_CALLING_CONTEXT_EVENTS</tt></dt>
+ <dd>
+   <p>Write calling context information as a sequence of Enter/Leave
+               events to trace</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Boolean</dd>
+   <dt>Default:</dt><dd>false</dd>
+  </dl>
+  
+  <p>When recording the calling context of events (instrumented or sampled) than
+  these could be stored in the trace either as the new CallingContext records
+  from OTF2 or they could be converted to the legacy Enter/Leave records. This
+  can be controlled with this variable, where the former is the false value.<br/>
+  This is only in effect if SCOREP_ENABLING_UNWINDING is on.<br/>
+  Note that enabling this will result in an increase of records per event and
+  also of the loss of the source code locations.<br/>
+  This option exists only for backwards compatibility for tools, which cannot
+  handle the new OTF2 records. This option my thus be removed in future
+  releases.</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_ONLINEACCESS_ENABLE<tt>SCOREP_ONLINEACCESS_ENABLE</tt></dt>
+ <dd>
+   <p>Enable online access interface</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Boolean</dd>
+   <dt>Default:</dt><dd>false</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_ONLINEACCESS_REG_PORT<tt>SCOREP_ONLINEACCESS_REG_PORT</tt></dt>
+ <dd>
+   <p>Online access registry service port</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Number</dd>
+   <dt>Default:</dt><dd>50100</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_ONLINEACCESS_REG_HOST<tt>SCOREP_ONLINEACCESS_REG_HOST</tt></dt>
+ <dd>
+   <p>Online access registry service hostname</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>String</dd>
+   <dt>Default:</dt><dd>&quot;localhost&quot;</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_ONLINEACCESS_BASE_PORT<tt>SCOREP_ONLINEACCESS_BASE_PORT</tt></dt>
+ <dd>
+   <p>Base port for online access server</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Number</dd>
+   <dt>Default:</dt><dd>50010</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_ONLINEACCESS_APPL_NAME<tt>SCOREP_ONLINEACCESS_APPL_NAME</tt></dt>
+ <dd>
+   <p>Application name to be registered</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>String</dd>
+   <dt>Default:</dt><dd>&quot;appl&quot;</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_FILTERING_FILE<tt>SCOREP_FILTERING_FILE</tt></dt>
+ <dd>
+   <p>A file name which contain the filter rules</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Path</dd>
+   <dt>Default:</dt><dd>&quot;&quot;</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_SUBSTRATE_PLUGINS<tt>SCOREP_SUBSTRATE_PLUGINS</tt></dt>
+ <dd>
+   <p>Specify list of used plugins</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>String</dd>
+   <dt>Default:</dt><dd>&quot;&quot;</dd>
+  </dl>
+  
+  <p>List of requested substrate plugin names that will be used during program run.</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_SUBSTRATE_PLUGINS_SEP<tt>SCOREP_SUBSTRATE_PLUGINS_SEP</tt></dt>
+ <dd>
+   <p>Separator of substrate plugin names</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>String</dd>
+   <dt>Default:</dt><dd>&quot;,&quot;</dd>
+  </dl>
+  
+  <p>Character that separates plugin names in SCOREP_SUBSTRATE_PLUGINS.</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_METRIC_PAPI<tt>SCOREP_METRIC_PAPI</tt></dt>
+ <dd>
+   <p>PAPI metric names to measure</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>String</dd>
+   <dt>Default:</dt><dd>&quot;&quot;</dd>
+  </dl>
+  
+  <p>List of requested PAPI metric names that will be collected during program run.</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_METRIC_PAPI_PER_PROCESS<tt>SCOREP_METRIC_PAPI_PER_PROCESS</tt></dt>
+ <dd>
+   <p>PAPI metric names to measure per-process</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>String</dd>
+   <dt>Default:</dt><dd>&quot;&quot;</dd>
+  </dl>
+  
+  <p>List of requested PAPI metric names that will be recorded only by first thread
+  of a process.</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_METRIC_PAPI_SEP<tt>SCOREP_METRIC_PAPI_SEP</tt></dt>
+ <dd>
+   <p>Separator of PAPI metric names</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>String</dd>
+   <dt>Default:</dt><dd>&quot;,&quot;</dd>
+  </dl>
+  
+  <p>Character that separates metric names in SCOREP_METRIC_PAPI and
+  SCOREP_METRIC_PAPI_PER_PROCESS.</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_METRIC_RUSAGE<tt>SCOREP_METRIC_RUSAGE</tt></dt>
+ <dd>
+   <p>Resource usage metric names to measure</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>String</dd>
+   <dt>Default:</dt><dd>&quot;&quot;</dd>
+  </dl>
+  
+  <p>List of requested resource usage metric names that will be collected during
+  program run.</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_METRIC_RUSAGE_PER_PROCESS<tt>SCOREP_METRIC_RUSAGE_PER_PROCESS</tt></dt>
+ <dd>
+   <p>Resource usage metric names to measure per-process</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>String</dd>
+   <dt>Default:</dt><dd>&quot;&quot;</dd>
+  </dl>
+  
+  <p>List of requested resource usage metric names that will be recorded only by
+  first thread of a process.</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_METRIC_RUSAGE_SEP<tt>SCOREP_METRIC_RUSAGE_SEP</tt></dt>
+ <dd>
+   <p>Separator of resource usage metric names</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>String</dd>
+   <dt>Default:</dt><dd>&quot;,&quot;</dd>
+  </dl>
+  
+  <p>Character that separates metric names in SCOREP_METRIC_RUSAGE and
+  SCOREP_METRIC_RUSAGE_PER_PROCESS.</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_METRIC_PLUGINS<tt>SCOREP_METRIC_PLUGINS</tt></dt>
+ <dd>
+   <p>Specify list of used plugins</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>String</dd>
+   <dt>Default:</dt><dd>&quot;&quot;</dd>
+  </dl>
+  
+  <p>List of requested metric plugin names that will be used during program run.</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_METRIC_PLUGINS_SEP<tt>SCOREP_METRIC_PLUGINS_SEP</tt></dt>
+ <dd>
+   <p>Separator of plugin names</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>String</dd>
+   <dt>Default:</dt><dd>&quot;,&quot;</dd>
+  </dl>
+  
+  <p>Character that separates plugin names in SCOREP_METRIC_PLUGINS.</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_METRIC_PERF<tt>SCOREP_METRIC_PERF</tt></dt>
+ <dd>
+   <p>PERF metric names to measure</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>String</dd>
+   <dt>Default:</dt><dd>&quot;&quot;</dd>
+  </dl>
+  
+  <p>List of requested PERF metric names that will be collected during program run.</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_METRIC_PERF_PER_PROCESS<tt>SCOREP_METRIC_PERF_PER_PROCESS</tt></dt>
+ <dd>
+   <p>PERF metric names to measure per-process</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>String</dd>
+   <dt>Default:</dt><dd>&quot;&quot;</dd>
+  </dl>
+  
+  <p>List of requested PERF metric names that will be recorded only by first thread
+  of a process.</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_METRIC_PERF_SEP<tt>SCOREP_METRIC_PERF_SEP</tt></dt>
+ <dd>
+   <p>Separator of PERF metric names</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>String</dd>
+   <dt>Default:</dt><dd>&quot;,&quot;</dd>
+  </dl>
+  
+  <p>Character that separates metric names in SCOREP_METRIC_PERF and
+  SCOREP_METRIC_PERF_PER_PROCESS.</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_SAMPLING_EVENTS<tt>SCOREP_SAMPLING_EVENTS</tt></dt>
+ <dd>
+   <p>Set the sampling event and period: <event>[@<period>]</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>String</dd>
+   <dt>Default:</dt><dd>&quot;perf_cycles@10000000&quot;</dd>
+  </dl>
+  
+  <p>This selects the interrupt source for sampling.<br/>
+  This is only in effect if SCOREP_ENABLE_UNWINDING is on.</p>
+<p><br/>
+  Possible values:<br/>
+  &nbsp;-&nbsp;perf event (perf_<event>, see "perf&nbsp;list")<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;period in number of events, default:&nbsp;10000000<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e.g., perf_cycles@2000000<br/>
+  &nbsp;-&nbsp;PAPI event (PAPI_<event>, see "papi_avail")<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;period in number of events, default:&nbsp;10000000<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e.g., PAPI_TOT_CYC@2000000<br/>
+  &nbsp;-&nbsp;timer (POSIX timer, invalid for multi-threaded)<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;period in us, default:&nbsp;10000<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e.g., timer@2000</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_SAMPLING_SEP<tt>SCOREP_SAMPLING_SEP</tt></dt>
+ <dd>
+   <p>Separator of sampling event names</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>String</dd>
+   <dt>Default:</dt><dd>&quot;,&quot;</dd>
+  </dl>
+  
+  <p>Character that separates sampling event names in SCOREP_SAMPLING_EVENTS</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_TOPOLOGY_PLATFORM<tt>SCOREP_TOPOLOGY_PLATFORM</tt></dt>
+ <dd>
+   <p>Record hardware topology information for this platform, if
+               available.</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Boolean</dd>
+   <dt>Default:</dt><dd>true</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_TOPOLOGY_PROCESS<tt>SCOREP_TOPOLOGY_PROCESS</tt></dt>
+ <dd>
+   <p>Record the Process x Thread topology.</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Boolean</dd>
+   <dt>Default:</dt><dd>true</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_TOPOLOGY_USER<tt>SCOREP_TOPOLOGY_USER</tt></dt>
+ <dd>
+   <p>Record topologies provided by user instrumentation</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Boolean</dd>
+   <dt>Default:</dt><dd>true</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_TOPOLOGY_MPI<tt>SCOREP_TOPOLOGY_MPI</tt></dt>
+ <dd>
+   <p>Record MPI cartesian topologies.</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Boolean</dd>
+   <dt>Default:</dt><dd>true</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_SELECTIVE_CONFIG_FILE<tt>SCOREP_SELECTIVE_CONFIG_FILE</tt></dt>
+ <dd>
+   <p>A file name which configures selective recording</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Path</dd>
+   <dt>Default:</dt><dd>&quot;&quot;</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_MPI_MAX_COMMUNICATORS<tt>SCOREP_MPI_MAX_COMMUNICATORS</tt></dt>
+ <dd>
+   <p>Determines the number of concurrently used communicators per
+               process</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Number</dd>
+   <dt>Default:</dt><dd>50</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_MPI_MAX_WINDOWS<tt>SCOREP_MPI_MAX_WINDOWS</tt></dt>
+ <dd>
+   <p>Determines the number of concurrently used windows for MPI
+               one-sided communication per process</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Number</dd>
+   <dt>Default:</dt><dd>50</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_MPI_MAX_EPOCHS<tt>SCOREP_MPI_MAX_EPOCHS</tt></dt>
+ <dd>
+   <p>Maximum amount of concurrently active access or exposure epochs
+               per process</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Number</dd>
+   <dt>Default:</dt><dd>50</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_MPI_MAX_GROUPS<tt>SCOREP_MPI_MAX_GROUPS</tt></dt>
+ <dd>
+   <p>Maximum number of concurrently used MPI groups per process</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Number</dd>
+   <dt>Default:</dt><dd>50</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_MPI_ENABLE_GROUPS<tt>SCOREP_MPI_ENABLE_GROUPS</tt></dt>
+ <dd>
+   <p>The names of the function groups which are measured</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Set</dd>
+   <dt>Default:</dt><dd>default</dd>
+  </dl>
+  
+  <p>Other functions are not measured.</p>
+<p><br/>
+  Possible groups are:</p>
+  <dl>
+    <dt>all</dt>
+    <dd>
+
+      <p>All MPI functions</p>
+    </dd>
+    <dt>cg</dt>
+    <dd>
+
+      <p>Communicator and group management</p>
+    </dd>
+    <dt>coll</dt>
+    <dd>
+
+      <p>Collective functions</p>
+    </dd>
+    <dt>default</dt>
+    <dd>
+
+      <p>Default configuration.<br/>
+      Includes:<br/>
+      &nbsp;-&nbsp;cg<br/>
+      &nbsp;-&nbsp;coll<br/>
+      &nbsp;-&nbsp;env<br/>
+      &nbsp;-&nbsp;io<br/>
+      &nbsp;-&nbsp;p2p<br/>
+      &nbsp;-&nbsp;rma<br/>
+      &nbsp;-&nbsp;topo<br/>
+      &nbsp;-&nbsp;xnonblock</p>
+    </dd>
+    <dt>env</dt>
+    <dd>
+
+      <p>Environmental management</p>
+    </dd>
+    <dt>err</dt>
+    <dd>
+
+      <p>MPI Error handling</p>
+    </dd>
+    <dt>ext</dt>
+    <dd>
+
+      <p>External interface functions</p>
+    </dd>
+    <dt>io</dt>
+    <dd>
+
+      <p>MPI file I/O</p>
+    </dd>
+    <dt>p2p</dt>
+    <dd>
+
+      <p>Peer-to-peer communication</p>
+    </dd>
+    <dt>misc</dt>
+    <dd>
+
+      <p>Miscellaneous</p>
+    </dd>
+    <dt>perf</dt>
+    <dd>
+
+      <p>PControl</p>
+    </dd>
+    <dt>rma</dt>
+    <dd>
+
+      <p>One sided communication</p>
+    </dd>
+    <dt>spawn</dt>
+    <dd>
+
+      <p>Process management</p>
+    </dd>
+    <dt>topo</dt>
+    <dd>
+
+      <p>Topology</p>
+    </dd>
+    <dt>type</dt>
+    <dd>
+
+      <p>MPI datatype functions</p>
+    </dd>
+    <dt>xnonblock</dt>
+    <dd>
+
+      <p>Extended non-blocking events</p>
+    </dd>
+    <dt>xreqtest</dt>
+    <dd>
+
+      <p>Test events for uncompleted requests</p>
+    </dd>
+    <dt>none/no</dt>
+    <dd>Disable feature</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_MPI_MEMORY_RECORDING<tt>SCOREP_MPI_MEMORY_RECORDING</tt></dt>
+ <dd>
+   <p>Enable tracking of memory allocations done by calls to
+               MPI_ALLOC_MEM and MPI_FREE_MEM</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Boolean</dd>
+   <dt>Default:</dt><dd>false</dd>
+  </dl>
+  
+  <p>Requires that the MISC group is also recorded.</p>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_MPI_ONLINE_ANALYSIS<tt>SCOREP_MPI_ONLINE_ANALYSIS</tt></dt>
+ <dd>
+   <p>Enable online mpi wait states analysis</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Boolean</dd>
+   <dt>Default:</dt><dd>false</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_SHMEM_MEMORY_RECORDING<tt>SCOREP_SHMEM_MEMORY_RECORDING</tt></dt>
+ <dd>
+   <p>Enable tracking of memory allocations done by calls to the SHMEM
+               allocation API</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Boolean</dd>
+   <dt>Default:</dt><dd>false</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_CUDA_ENABLE<tt>SCOREP_CUDA_ENABLE</tt></dt>
+ <dd>
+   <p>CUDA measurement features</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Set</dd>
+   <dt>Default:</dt><dd>no</dd>
+  </dl>
+  
+  <p>Sets the CUDA measurement mode to capture:</p>
+  <dl>
+    <dt>runtime</dt>
+    <dd>
+
+      <p>CUDA runtime API</p>
+    </dd>
+    <dt>driver</dt>
+    <dd>
+
+      <p>CUDA driver API</p>
+    </dd>
+    <dt>kernel</dt>
+    <dd>
+
+      <p>CUDA kernels</p>
+    </dd>
+    <dt>kernel_serial</dt>
+    <dd>
+
+      <p>Serialized kernel recording</p>
+    </dd>
+    <dt>kernel_counter</dt>
+    <dd>
+
+      <p>Fixed CUDA kernel metrics</p>
+    </dd>
+    <dt>memcpy</dt>
+    <dd>
+
+      <p>CUDA memory copies</p>
+    </dd>
+    <dt>sync</dt>
+    <dd>
+
+      <p>Record implicit and explicit CUDA synchronization</p>
+    </dd>
+    <dt>idle</dt>
+    <dd>
+
+      <p>GPU compute idle time</p>
+    </dd>
+    <dt>pure_idle</dt>
+    <dd>
+
+      <p>GPU idle time (memory copies are not idle)</p>
+    </dd>
+    <dt>gpumemusage</dt>
+    <dd>
+
+      <p>Record CUDA memory (de)allocations as a counter</p>
+    </dd>
+    <dt>references</dt>
+    <dd>
+
+      <p>Record references between CUDA activities</p>
+    </dd>
+    <dt>flushatexit</dt>
+    <dd>
+
+      <p>Flush CUDA activity buffer at program exit</p>
+    </dd>
+    <dt>default/yes/1</dt>
+    <dd>
+
+      <p>CUDA runtime API and GPU activities.<br/>
+      Includes:<br/>
+      &nbsp;-&nbsp;runtime<br/>
+      &nbsp;-&nbsp;kernel<br/>
+      &nbsp;-&nbsp;memcpy</p>
+    </dd>
+    <dt>none/no</dt>
+    <dd>Disable feature</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_CUDA_BUFFER<tt>SCOREP_CUDA_BUFFER</tt></dt>
+ <dd>
+   <p>Total memory in bytes for the CUDA record buffer</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Number with size suffixes</dd>
+   <dt>Default:</dt><dd>1M</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_CUDA_BUFFER_CHUNK<tt>SCOREP_CUDA_BUFFER_CHUNK</tt></dt>
+ <dd>
+   <p>Chunk size in bytes for the CUDA record buffer (ignored for
+               CUDA&nbsp;5.5 and earlier)</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Number with size suffixes</dd>
+   <dt>Default:</dt><dd>8k</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_OPENCL_ENABLE<tt>SCOREP_OPENCL_ENABLE</tt></dt>
+ <dd>
+   <p>OpenCL measurement features</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Set</dd>
+   <dt>Default:</dt><dd>no</dd>
+  </dl>
+  
+  <p>Sets the OpenCL measurement mode to capture:</p>
+  <dl>
+    <dt>api</dt>
+    <dd>
+
+      <p>OpenCL runtime API</p>
+    </dd>
+    <dt>kernel</dt>
+    <dd>
+
+      <p>OpenCL kernels</p>
+    </dd>
+    <dt>memcpy</dt>
+    <dd>
+
+      <p>OpenCL buffer reads/writes</p>
+    </dd>
+    <dt>default/yes/true/1</dt>
+    <dd>
+
+      <p>OpenCL API and GPU activities.<br/>
+      Includes:<br/>
+      &nbsp;-&nbsp;api<br/>
+      &nbsp;-&nbsp;kernel<br/>
+      &nbsp;-&nbsp; memcpy</p>
+    </dd>
+    <dt>none/no</dt>
+    <dd>Disable feature</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_OPENCL_BUFFER_QUEUE<tt>SCOREP_OPENCL_BUFFER_QUEUE</tt></dt>
+ <dd>
+   <p>Memory in bytes for the OpenCL command queue buffer</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Number with size suffixes</dd>
+   <dt>Default:</dt><dd>8k</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_OPENACC_ENABLE<tt>SCOREP_OPENACC_ENABLE</tt></dt>
+ <dd>
+   <p>OpenACC measurement features</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Set</dd>
+   <dt>Default:</dt><dd>no</dd>
+  </dl>
+  
+  <p>Sets the OpenACC measurement mode to capture:</p>
+  <dl>
+    <dt>regions</dt>
+    <dd>
+
+      <p>OpenACC regions</p>
+    </dd>
+    <dt>wait</dt>
+    <dd>
+
+      <p>OpenACC wait operations</p>
+    </dd>
+    <dt>enqueue</dt>
+    <dd>
+
+      <p>OpenACC enqueue operations (kernel, upload, download)</p>
+    </dd>
+    <dt>device_alloc</dt>
+    <dd>
+
+      <p>OpenACC device memory allocations</p>
+    </dd>
+    <dt>kernel_properties</dt>
+    <dd>
+
+      <p>Record kernel properties such as the kernel name as well as the gang,
+      worker and vector size for kernel launch operations</p>
+    </dd>
+    <dt>variable_names</dt>
+    <dd>
+
+      <p>Record variable names for OpenACC data allocation and enqueue
+      upload/download</p>
+    </dd>
+    <dt>default/yes/1</dt>
+    <dd>
+
+      <p>OpenACC regions, enqueue and wait operations.<br/>
+      Includes:<br/>
+      &nbsp;-&nbsp;regions<br/>
+      &nbsp;-&nbsp;wait<br/>
+      &nbsp;-&nbsp;enqueue</p>
+    </dd>
+    <dt>none/no</dt>
+    <dd>Disable feature</dd>
+  </dl>
+ </dd>
+ <br/>
+ <dt>@anchor SCOREP_MEMORY_RECORDING<tt>SCOREP_MEMORY_RECORDING</tt></dt>
+ <dd>
+   <p>Memory recording</p>
+  <br/>
+  <dl>
+   <dt>Type:</dt><dd>Boolean</dd>
+   <dt>Default:</dt><dd>false</dd>
+  </dl>
+  
+  <p>Memory (de)allocations are recorded via the libc/C++ API.</p>
+ </dd>
+ <br/>
+</dl>

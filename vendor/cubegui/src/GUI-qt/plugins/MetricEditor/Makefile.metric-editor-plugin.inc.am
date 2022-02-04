@@ -1,0 +1,64 @@
+##*************************************************************************##
+##  CUBE        http://www.scalasca.org/                                   ##
+##*************************************************************************##
+##  Copyright (c) 1998-2019                                                ##
+##  Forschungszentrum Juelich GmbH, Juelich Supercomputing Centre          ##
+##                                                                         ##
+##  This software may be modified and distributed under the terms of       ##
+##  a BSD-style license.  See the COPYING file in the package base         ##
+##  directory for details.                                                 ##
+##*************************************************************************##
+
+
+## --------------- CALLTREE ---------------------------
+
+metric_editor_plugindir = $(libdir)/cube-plugins
+metric_editor_plugin_LTLIBRARIES = metric_editor-plugin.la
+
+metric_editor_plugin_la_SOURCES = \
+$(SRC_ROOT)src/GUI-qt/plugins/MetricEditor/CubePLSyntaxHighlighter.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/MetricEditor/CubePLSyntaxHighlighter.h \
+$(SRC_ROOT)src/GUI-qt/plugins/MetricEditor/DerivedMetricEditor.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/MetricEditor/DerivedMetricEditor.h \
+$(SRC_ROOT)src/GUI-qt/plugins/MetricEditor/DerivedMetricsCollection.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/MetricEditor/DerivedMetricsCollection.h \
+$(SRC_ROOT)src/GUI-qt/plugins/MetricEditor/HtmlHelpCollection.cpp  \
+$(SRC_ROOT)src/GUI-qt/plugins/MetricEditor/HtmlHelpCollection.h \
+$(SRC_ROOT)src/GUI-qt/plugins/MetricEditor/MetricData.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/MetricEditor/MetricData.h \
+$(SRC_ROOT)src/GUI-qt/plugins/MetricEditor/MetricEditor.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/MetricEditor/MetricEditor.h \
+$(SRC_ROOT)src/GUI-qt/plugins/MetricEditor/NewDerivatedMetricWidget.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/MetricEditor/NewDerivatedMetricWidget.h 
+
+
+metric_editor_plugin_la_LIBADD =  \
+    $(CUBELIB_LIBADD) \
+    libcube4gui.la 
+metric_editor_plugin_la_LDFLAGS = $(QT_LDFLAGS) $(OPENMP_LDFLAGS) $(OPENMP_CXXFLAGS) $(SUBLIBS) $(QT_LIBS)  $(FRONTEND_LIBZ_LD) $(DBUS_LDFLAGS) $(CUBELIB_LDFLAGS)
+metric_editor_plugin_la_CXXFLAGS = $(AM_CXXFLAGS) $(CXXFLAGS_FOR_BUILD) $(OPENMP_CXXFLAGS) $(DBUS_CXXFLAGS) $(FRONTEND_LIBZ_HEADERS) \
+-I$(CUBE4_HEADERS_ROOT) $(QT_CXXFLAGS) $(QT_CPPFLAGS) -DCUBE_PREFIX='"$(prefix)"' $(CUBELIB_INCLUDEPATH) $(GUI_INCLUDES) \
+$(HMI_INSTRUMENTATION) \
+$(CUBE_DEBUG_FLAGS)  -I.
+
+metric_editor_plugin_la_LDFLAGS +=  -lcube4
+metric_editor_plugin_la_LDFLAGS +=  -module -avoid-version -shared # don't generate static library and version number of shared library
+
+
+metric_editor_plugin_moc_files = \
+../src/GUI-qt/plugins/MetricEditor/MetricEditor.moc.cpp \
+../src/GUI-qt/plugins/MetricEditor/DerivedMetricEditor.moc.cpp \
+../src/GUI-qt/plugins/MetricEditor/CubePLSyntaxHighlighter.moc.cpp  \
+../src/GUI-qt/plugins/MetricEditor/NewDerivatedMetricWidget.moc.cpp
+
+metric_editor_plugin_moc_o=$(metric_editor_plugin_moc_files:%.moc.o=%.moc.cpp)
+
+CLEANFILES += $(metric_editor_plugin_moc_files)
+nodist_metric_editor_plugin_la_SOURCES = $(metric_editor_plugin_moc_files)
+
+$(metric_editor_plugin_moc_o):../src/GUI-qt/plugins/MetricEditor/%.moc.cpp: $(SRC_ROOT)src/GUI-qt/plugins/MetricEditor/%.h
+	@echo "Create moc file $@"
+	@$(MKDIR_P) ../src/GUI-qt/plugins/MetricEditor
+	@$(MOC) $(QT_CPPFLAGS) $(CUBELIB_INCLUDEPATH) $(GUI_INCLUDES) \
+        $(CUBE_DEBUG_FLAGS) $(DEFINE_TRACE_BROWSER) $< -o $@
+

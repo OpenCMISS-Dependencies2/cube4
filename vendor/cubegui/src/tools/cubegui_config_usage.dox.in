@@ -1,0 +1,38 @@
+Usage: cubegui-config [OPTION]... COMMAND
+
+Commands:
+  --cflags     prints additional compiler flags. They already contain
+               the include flags
+  --cppflags   prints the include flags for the Cube GUI headers
+  --libs       prints the required libraries for linking
+  --ldflags    prints the required linker flags
+  --incldir    prints the directory for the Cube GUI headers
+  --cc         prints the C compiler name
+  --cxx        prints the C++ compiler name
+  --features <FEATURE-CATEGORY>
+               prints available features selected by <FEATURE-CATEGORY>.
+               Available feature categories:
+                * substrates
+                * compressions
+                * targets
+  --qmake      prints path to used qmake tool
+  --moc        prints path to used moc tool
+  --uic        prints path to used uic tool
+  --rcc        prints path to used rcc tool
+  --cubelib-config
+               prints path to used cubelib-config tool
+  --help       prints this usage information
+
+  --version    prints the version number of the Cube Writer package and
+  --cubegui-revision
+               prints the revision number of the Cube Writer package
+  --interface-version
+               prints the interface version number
+  --config-summary
+               prints the summary of the Cube GUI configuration 
+
+Options:
+  --target <TARGET>
+               displays the requested information for the given <TARGET>.
+               On non-cross compiling systems, the 'backend' target is ignored.
+

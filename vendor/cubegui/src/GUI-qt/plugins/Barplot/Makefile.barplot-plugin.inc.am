@@ -1,0 +1,75 @@
+##*************************************************************************##
+##  CUBE        http://www.scalasca.org/                                   ##
+##*************************************************************************##
+##  Copyright (c) 1998-2016                                                ##
+##  Forschungszentrum Juelich GmbH, Juelich Supercomputing Centre          ##
+##                                                                         ##
+##  Copyright (c) 2009-2015                                                ##
+##  German Research School for Simulation Sciences GmbH,                   ##
+##  Laboratory for Parallel Programming                                    ##
+##                                                                         ##
+##  This software may be modified and distributed under the terms of       ##
+##  a BSD-style license.  See the COPYING file in the package base         ##
+##  directory for details.                                                 ##
+##*************************************************************************##
+
+
+## --------------- CALLTREE ---------------------------
+
+libbarplot_plugindir = $(libdir)/cube-plugins
+
+CUBE4_GUI_QT_PLUGINS_BARPLOT_INC = $(INC_ROOT)src/GUI-qt/plugins/Barplot
+CUBE4_GUI_QT_PLUGINS_GRAPHWIDGET_COMMON_INC = $(INC_ROOT)src/GUI-qt/plugins/Graphwidget-common
+
+libbarplot_plugin_LTLIBRARIES = libbarplot-plugin.la
+
+libbarplot_plugin_la_SOURCES = \
+$(SRC_ROOT)src/GUI-qt/plugins/Barplot/Barplot.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Barplot/Barplot.h  \
+$(SRC_ROOT)src/GUI-qt/plugins/Barplot/BarplotArea.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Barplot/BarplotArea.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Barplot/BarplotController.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Barplot/BarplotController.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Barplot/PlotsListController.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/Barplot/PlotsListController.h \
+$(SRC_ROOT)src/GUI-qt/plugins/Barplot/SettingsWidget.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Barplot/SettingsWidget.h
+
+libbarplot_plugin_la_LIBADD =  libgraphwidgetcommon-plugin.la \
+    $(CUBELIB_LIBADD)\
+    libcube4gui.la 
+libbarplot_plugin_la_LDFLAGS = $(QT_LDFLAGS) $(OPENMP_LDFLAGS) $(OPENMP_CXXFLAGS) $(SUBLIBS) $(QT_LIBS)  $(FRONTEND_LIBZ_LD) $(DBUS_LDFLAGS) $(CUBELIB_LDFLAGS)
+libbarplot_plugin_la_LDFLAGS += -module -avoid-version -shared # don't generate static library and version number of shared library
+
+libbarplot_plugin_la_CXXFLAGS = $(AM_CXXFLAGS) \
+$(CXXFLAGS_FOR_BUILD) \
+$(OPENMP_CXXFLAGS) \
+$(DBUS_CXXFLAGS) \
+$(FRONTEND_LIBZ_HEADERS) \
+$(QT_CXXFLAGS) $(QT_CPPFLAGS) \
+-DCUBE_PREFIX='"$(prefix)"' \
+-DWITH_PLUGINS \
+-I$(CUBE4_GUI_QT_PLUGINS_GRAPHWIDGET_COMMON_INC) \
+-I$(CUBE4_GUI_QT_PLUGINS_BARPLOT_INC) \
+$(CUBELIB_INCLUDEPATH) \
+$(GUI_INCLUDES) \
+$(HMI_INSTRUMENTATION) \
+$(CUBE_DEBUG_FLAGS) \
+-I.
+
+libbarplot_plugin_moc_files = \
+../src/GUI-qt/plugins/Barplot/Barplot.moc.cpp \
+../src/GUI-qt/plugins/Barplot/BarplotController.moc.cpp\
+../src/GUI-qt/plugins/Barplot/PlotsListController.moc.cpp\
+../src/GUI-qt/plugins/Barplot/SettingsWidget.moc.cpp
+
+libbarplot_plugin_moc_o=$(libbarplot_plugin_moc_files:%.moc.o=%.moc.cpp)
+
+CLEANFILES += $(libbarplot_plugin_moc_files)
+nodist_libbarplot_plugin_la_SOURCES = $(libbarplot_plugin_moc_files)
+
+$(libbarplot_plugin_moc_o):../src/GUI-qt/plugins/Barplot/%.moc.cpp: $(SRC_ROOT)src/GUI-qt/plugins/Barplot/%.h
+	@echo "Create moc file $@"
+	@$(MKDIR_P) ../src/GUI-qt/plugins/Barplot
+	@$(MOC) $(QT_CPPFLAGS) $(CUBELIB_INCLUDEPATH) $(GUI_INCLUDES) \
+        $(CUBE_DEBUG_FLAGS) $(DEFINE_TRACE_BROWSER) $< -o $@

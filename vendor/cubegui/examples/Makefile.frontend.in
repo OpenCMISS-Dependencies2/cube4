@@ -1,0 +1,87 @@
+##*************************************************************************##
+##  CUBE        http://www.scalasca.org/                                   ##
+##*************************************************************************##
+##  Copyright (c) 1998-2020                                                ##
+##  Forschungszentrum Juelich GmbH, Juelich Supercomputing Centre          ##
+##                                                                         ##
+##  Copyright (c) 2009-2015                                                ##
+##  German Research School for Simulation Sciences GmbH,                   ##
+##  Laboratory for Parallel Programming                                    ##
+##                                                                         ##
+##  This software may be modified and distributed under the terms of       ##
+##  a BSD-style license.  See the COPYING file in the package base         ##
+##  directory for details.                                                 ##
+##*************************************************************************##
+
+
+#------------------------------------------------------------------------------
+# General Settings
+#------------------------------------------------------------------------------
+prefix=@prefix@
+CUBE_EXAMPLES_DIR =  @datadir@/doc/@PACKAGE@/example/gui
+
+
+
+
+.SUFFIXES: .c .o .cpp .c.exe .cpp.exe .c.o .cpp.o .java .java.class .mpi.c .mpi.cpp .mpi.c.exe .mpi.cpp.exe
+.PHONY: all  clean
+
+
+# Object files
+OBJS =  
+TARGET =
+#ifeq ($(ISCUBE), "yes")
+# OBJS += cube_example.cpp.o 
+TARGET+= $(CUBE_EXAMPLES_DIR)/plugin-colormap  \
+	 $(CUBE_EXAMPLES_DIR)/plugin-context-free  \
+	 $(CUBE_EXAMPLES_DIR)/plugin-demo  \
+	 $(CUBE_EXAMPLES_DIR)/plugin-simple \
+	 $(CUBE_EXAMPLES_DIR)/plugin-value-view \
+	 $(CUBE_EXAMPLES_DIR)/plugin-parallel
+
+
+
+%.cpp.o : %.cpp
+	$(CXX) -c $< -o $@ $(CPPFLAGS)
+
+%.cpp.exe : %.cpp.o
+	$(CXX)  $< -o $@ $(CPPLDFLAGS)
+
+
+
+
+%.mpic.c.o : %.mpi.c
+	$(MPICC) -c $< -o $@ $(CFLAGS)
+
+%.mpi.c.exe : %.mpi.c.o
+	$(MPICC) $< -o $@  $(CLDFLAGS)
+
+%.mpi.cpp.o : %.mpi.cpp
+	$(MPICXX) -c $< -o $@ $(CPPFLAGS) $(CFLAGS)
+
+%.mpi.cpp.exe : %.mpi.cpp.o
+	$(MPICXX) $< -o $@  $(CLDFLAGS)
+
+
+
+%.c.o : %.c
+	$(CC) -c $< -o $@ $(CFLAGS) 
+
+%.c.exe : %.c.o
+	$(CC)  $< -o $@ $(CLDFLAGS)
+
+#------------------------------------------------------------------------------
+# Rules
+#------------------------------------------------------------------------------
+
+all: $(TARGET) 
+	@echo "=============================================================="
+	@echo "'make run' - will run all frontend examples one after other."
+	@echo "=============================================================="
+
+
+run: 
+	@for japp in $(TARGET); do \
+	cd $$japp; @QMAKE@; make; \
+	done
+

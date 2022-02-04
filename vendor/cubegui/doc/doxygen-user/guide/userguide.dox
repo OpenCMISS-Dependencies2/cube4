@@ -1,0 +1,3173 @@
+/****************************************************************************
+**  CUBE        http://www.scalasca.org/                                   **
+*****************************************************************************
+**  Copyright (c) 1998-2021                                                **
+**  Forschungszentrum Juelich GmbH, Juelich Supercomputing Centre          **
+**                                                                         **
+**  Copyright (c) 2009-2013                                                **
+**  German Research School for Simulation Sciences GmbH,                   **
+**  Laboratory for Parallel Programming                                    **
+**                                                                         **
+**  This software may be modified and distributed under the terms of       **
+**  a BSD-style license.  See the COPYING file in the package base         **
+**  directory for details.                                                 **
+****************************************************************************/
+
+
+/** @page userguide Cube User Guide
+
+@section abstract Abstract 
+<small>
+\cube is a presentation component suitable for displaying
+performance data for parallel programs including
+\mpi and Open\openmp applications. Program performance is
+represented in a multi-dimensional space including various program and
+system resources. The tool allows the interactive exploration of this
+space in a scalable fashion and browsing the different kinds of
+performance behavior with ease. \cube also includes a library to
+read and write performance data as well as operators to compare,
+integrate, and summarize data from different experiments.  This user
+manual provides instructions of how to use the \cube display, how
+to use the operators, and how to write \cube files.
+
+The version 4 of \cube implementation has an incompatible API and file format
+to preceding versions.
+</small>
+
+
+
+
+@section intro Introduction
+
+\cube (CUBE Uniform Behavioral Encoding) is a presentation
+component suitable for displaying a wide variety of performance
+data for parallel programs including \mpi \cite{mpif95} and
+\openmp \cite{openmp05} applications. \cube allows interactive
+exploration of the performance data in a scalable fashion.
+Scalability is achieved in two ways: hierarchical decomposition of
+individual dimensions and aggregation across different dimensions. All
+metrics are uniformly presented in the same display and thus
+provide the ability to easily compare the effects of different kinds
+of program behavior.
+
+\cube has been designed around a high-level data model of program
+behavior called the \emph{cube performance space}. The \cube
+performance space consists of three dimensions: a metric dimension, a
+program dimension, and a system dimension.  The \emph{metric
+  dimension} contains a set of metrics, such as communication time or
+cache misses.  The \emph{program dimension} contains the program's
+call-tree, which includes all the call paths onto which metric values
+can be mapped. The \emph{system dimension} contains the components
+executing in parallel, which can be processes or threads depending on
+the parallel programming model.  Each point    \f$   (m, c, s)   \f$    of the space
+can be mapped onto a number representing the actual measurement for
+metric    \f$   m  \f$    while the control flow of process/thread   \f$   s  \f$    was executing
+call path   \f$   c  \f$   .  This mapping is called the \em severity of the
+performance space.
+
+Each dimension of the performance space is organized in a
+\emph{hierarchy}. First, the metric dimension is organized in an
+inclusion hierarchy where a metric at a lower level is a subset of its
+parent. For example, communication time is a subset of execution time.
+Second, the program dimension is organized in a call-tree hierarchy.
+However, sometimes it can be advantageous to abstract away from the
+hierarchy of the call-tree, for example if one is interested in the
+severities of certain methods, independently of the position of their
+invocations.  For this purpose \cube supports also flat call
+profiles, that are represented as a flat sequence of all 
+methods.  Finally, the system dimension is organized in a multi-level
+hierarchy consisting of the levels, e.g., machine, \textsc{smp} node, process,
+and thread. This hierarchy can vary depending on the used system.
+
+\cube also provides a \emph{library} to read and write instances
+of the previously described data model in the form of a \textsc{cubex} file 
+(which is  a \textsc{tar} ed directory). 
+The file representation is divided into a \em metadata part
+and a \em data part. The metadata part describes the structure of
+the three dimensions plus the definitions of various program and
+system resources and stored in a form of an \textsc{tar}
+file \texttt{anchor.xml} inside of the \textsc{cubex} envelope. The data part 
+contains the actual severity numbers
+to be mapped onto the different elements of the performance space and stored 
+in binary format in various files inside of the \textsc{cubex} envelope. 
+
+The \emph{display} component can load such a file and display the
+different dimensions of the performance space using three coupled tree
+browsers (figure \figref{gui}). The browsers are connected in such a
+way that you can view one dimension with respect to another dimension.
+The connection is based on \emph{selections}: in each tree you can
+select one or more nodes. For example, in Figure \figref{gui} the
+\disp{Execution} metric, the \disp{adi} call path node, and
+\disp{Process 0} are selected. For each tree, the selections in the
+trees on its left-hand-side (if any) restrict the considered data: The
+metric nodes aggregate data over all call paths and all system-tree
+nodes, the call-tree aggregates data for the \disp{Execution metric}
+over all system nodes, and each node of the system-tree shows the
+severity for the \emph{Execution} metric of the selected call path
+for this system node.
+
+If the \cube file contains topological information, the
+distribution of the performance metric across the topology can be
+examined using the \emph{topology view}.  Furthermore, the display is
+augmented with a source-code display that shows the position
+of a call site in the source code.
+
+As performance tuning of parallel applications usually involves
+multiple experiments to compare the effects of certain optimization
+strategies, \cube includes a feature designed to simplify
+cross-experiment analysis. The \emph{\cube algebra} \cite{song_ea04}
+is an extension of the framework for multi-execution performance
+tuning by Karavanic and Miller \cite{karavanic_ea01} and offers a set
+of operators that can be used to compare, integrate, and summarize
+multiple \cube data sets. The algebra allows the combination of
+multiple \cube data sets into a single one that can be displayed and
+examined like the original ones.
+
+In addition to the information provided by plain \cube files a statistics
+file can be provided, enabling the display of additional statistical
+information of severity values. Furthermore, a statistics file can also
+contain information about the most severe instances of certain performance
+patterns -- globally as well as with respect to specific call paths. If a
+trace file of the program being analyzed is available, the user can connect
+to a trace browser (i.e. Vampir) and then use \cube to zoom
+their timelines to the most severe instances of the performance patterns for
+a more detailed examination of the cause of these performance patterns.
+
+
+The following sections explain how to use the \cube display, how to create
+\cube files, and how to use the algebra and other tools.
+
+@section cloptions Command line  options
+    To invoke \gui for  \cube profile exploration one uses command: 
+    \verbatim        cube [options] filename  \endverbatim  
+    A list of main options:
+        <dl>
+        <dt>-disable-plugins        </dt><dd> start cube with all plugins disabled </dd>
+        <dt>-docpath=\<path>\         </dt><dd> path to the html documentation </dd>
+        <dt>-presentation           </dt><dd> opens cube in presentation mode, which shows a mouse icon next to the cursor</dd>
+        <dt>-single                 </dt><dd> disable parallel execution of cube </dd>
+        <dt>-start \<plugin\> [args]</dt><dd> start context free plugin with the name \<plugin\> </dd>
+        <dt>-verbose                </dt><dd> print detailed information </dd>
+        <dt>-h|-help                </dt><dd> Display list of command line options </dd>
+        </dl>
+    A list of developer options:
+        <dl>
+        <dt>-disable-calculation</dt><dd> disable automatic calculation of tree items </dd>
+        <dt>-expert             </dt><dd> start cube in expert mode which shows e.g. ghost metrics or additional analyses in Advisor plugin </dd>
+        <dt>-memory=\<strategy\>  </dt><dd> uses given memory strategy.
+        If the option is omitted, CubeGUI reads the data from the .cubex file at the first access.
+        "preload" reads all data into memory during the initialization phase.
+        "lastN" keeps the last N data rows in memory. N is set via environment CUBE_NUMBER_ROWS. </dd>
+        </dl>
+        
+ 
+@section envvars Environment variables
+
+
+\cube provides the option of displaying an online description for entries
+in the metric-tree via a context menu. By default, it will search for the
+given HTML description file on all the mirror URLs specified in the \cube
+file. In case there is no Internet connection, the Qt-based
+\cube GUI can be configured to also search in a list of local directories
+for documentation files. These additional search paths can be specified
+via the environment variable \texttt{CUBE_DOCPATH} as a colon-separated
+list of local directories, e.g.,\n
+\verbatim        CUBE_DOCPATH=/opt/software/doc:/usr/local/share/doc \endverbatim \n
+Note that this feature is only available in the Qt-based GUI and
+\textbf{not} in the older wxWidgets-based one.
+
+To prevent \cube from trying to load the HTML documentation via HTTP or HTTPS 
+mirror URLs (e.g., in restricted environments were outbound connections are 
+blocked by a firewall and the timeout is taking very long), the environment 
+variable \texttt{CUBE_DISABLE_HTTP_DOCS} can be set to either \texttt{1}, 
+\texttt{yes} or \texttt{true}. 
+
+Cube searches for plugins in the directory "cube-plugins/" below the installation 
+directory. This is the place where the predefined plugins are installed.  
+With the environment variable  \texttt{CUBE_PLUGIN_DIR} one can specify a 
+user defined place where third-party plugins are installed. If 
+\texttt{CUBE_PLUGIN_DIR} contains a colon or semicolon separated list of paths, 
+these paths are prepended to the default search path.
+
+\cube C++ library allows to control the way it loads the data using the environment
+variable \texttt{CUBE_DATA_LOADING}. 
+Following values are possible:
+<ol>
+<li> \textbf{keepall} - data is loaded on demand and kept in memory to the end 
+      of lyfecycle of the Cube object. </li>
+<li> \textbf{preload} - all data is loaded during the metric initialization and 
+kept in memory to the end of lyfecycle of the Cube object. </li>
+<li> \textbf{manual} - Application should request and drop the data sets explicitly. 
+    No correctness check is performed. Therefore one has to use this strategy with 
+care. 
+</li>
+<li> \textbf{lastn} - Only \texttt{N} last used data rows are kept in memory. 
+\texttt{N} is specified via environment variable \texttt{CUBE_NUMBER_ROWS}
+</li>
+</ol>
+
+@seclist
+    @secitem{usage}
+    @secitem{clientserver}
+    @secitem{splugins}
+    @secitem{otherfeatures}
+    @secitem{keyboardcontrol}
+@endseclist
+
+@navigation_next{usage}
+*/
+// @seclist is required to insert @page as child of current section
+//---------------------------------------------------------------------------
+/**
+
+@page usage Using the Display
+
+This section explains how to use the \cubeqt display component. After
+installation, the executable \disp{"cube"} can be found in the
+specified directory of executables (specifiable by the ``prefix''
+argument of configure, see the \cube Installation Manual).  The
+program supports as an optional command-line argument the name of a
+cube file that will be opened upon program start.
+
+After a brief description of the basic principles,
+different components of the \gui will be described in detail.
+
+@section basics Basic Principles
+
+The \cubeqt display has three tree browsers, each of them
+representing a dimension of the performance space
+(figure \figref{gui}).  Per default, the left tree displays the
+metric dimension, the middle tree displays the program dimension, and
+the right tree displays the system dimension. The nodes in the metric
+tree represent metrics. The nodes in the program dimension can have
+different semantics depending on the particular view that has been
+selected. In Figure\figref{gui}, they represent call paths forming a
+call-tree. The nodes in the system dimension represent machines,
+nodes, processes, or threads from top to bottom.
+
+
+@img{cube1.png,gui,\cube display window,width=0.8\textwidth}
+@img{cube2.png,gui2,\cube display window with expanded  metric node ''Execution'',width=0.8\textwidth}
+
+
+Each node is associated with a value, which is called the \emph{severity}  and is displayed simultaneously using a numerical value
+as well as a colored square. Colors enable the easy identification of
+nodes of interest even in a large tree, whereas the numerical values
+enable the precise comparison of individual values. The sign of a
+value is visually distinguished by the \emph{relief} of the colored
+square. A raised relief indicates a positive sign, a sunken relief
+indicates a negative sign.
+
+Users can perform two basic types of actions: selecting a node or
+expanding/collapsing a node. In the metric-tree in
+figure \figref{gui}, the metric \disp{Execution} is selected.
+\emph{Selecting} a node in a tree causes the other trees on its right
+to display values for that selection. For the example of
+figure \figref{gui}, the metric-tree displays the total metric values
+over all call-tree and system nodes, the call-tree displays values for the
+\disp{Execution} metric over all system entities, and the system-tree
+for the \disp{Execution} metric and the \disp{adi} call-tree node.
+Briefly, a tree is always an aggregation over all selected nodes of
+its neighboring trees to the left.
+
+\emph{Collapsed} nodes with a subtree that is not shown are marked by
+a [+] sign, \emph{expanded} nodes with a visible subtree by a [-] sign.
+You can expand/collapse a node by left-clicking on the corresponding
+[+]/[-] signs.  Collapsed nodes have \emph{inclusive} values, i.e., their
+severity is the sum of the severities over the whole collapsed
+subtree. For the example of Figure\figref{gui}, the \disp{Execution}
+metric value  \f$    3496.10 \f$    is the total time for all executions. On the
+other hand, the displayed values of expanded nodes are their
+\emph{exclusive} values.  E.g., the expanded \disp{Execution} metric
+node in Figure \figref{gui2} shows that the program needed  \f$    2839.54 \f$   
+seconds for execution other than \disp{MPI}.
+
+Note that expanding/collapsing a selected node causes the change of
+the current values in the trees on its right-hand side. As explained
+above, in our example in Figure \figref{gui} the call-tree displays
+values for the \disp{Execution} metric over all system entities. Since
+the \disp{Execution} node is collapsed, the call-tree severities are
+computed for the whole \disp{Execution} metric's subtree. When
+expanding the selected \disp{Execution} node, as shown in
+Figure \figref{gui2}, the call-tree displays values for the
+\disp{Execution} metric without the \disp{MPI} metric.
+
+\latexonly \newpage \endlatexonly
+
+@section guicomp GUI Components
+
+The \gui &nbsp;consists (from top to bottom) of
+<ul>
+<li> a menu bar,
+<li> three value mode combo boxes,
+<li> three resizable panes each containing some tabs,
+<li> three selected value information widgets,
+<li> a color legend, and
+<li> a status bar.
+</ul>
+
+@seclist
+    @secitem{smenu}
+    @secitem{valuemodes}
+    @secitem{subsets}
+    @secitem{trees}
+    @secitem{valueinfo}
+    @secitem{colorlegend}
+    @secitem{status}
+@endseclist
+
+
+The three resizable panes offer different views: the metric, the call,
+and the system pane. You can switch between the different tabs of a
+pane by left-clicking on the desired tab at the top of the pane. Note
+that the order of the panes can be changed (see the description of the
+menu item \emph{Display \submenu Dimension order} in
+Section @ref smenu ).
+
+The metric pane provides only the metric-tree browser.  The call pane
+offers a call-tree browser and a flat call profile. If OpenMP tasks 
+have been instrumented, an additional task-tree is inserted.
+The system pane has a system-tree browser. Tree browsers also provide a context menu.
+
+@subsection smenu Menu Bar
+
+The menu bar consists of four menus: a file menu, a display menu, a
+plugin menu and a help menu. Some menu functions also have a
+keyboard shortcut, which is written besides the menu item's name in
+the menu. E.g., you can open a file with Ctrl+O without going into
+the menu.  A short description of the menu items is visible in the
+status bar if you stay for a short while with the mouse above a menu
+item.
+
+<ol>
+
+<li> \textbf{File:} The file menu offers the following functions:
+  <ol>
+  <li> \textbf{Open (Ctrl+O):} Offers a selection dialog to open a
+    \cube file. In case of an already opened file, it will be closed
+    before a new file gets opened. If a file got opened successfully,
+    it gets added to the top of the recent files list (see below). If
+    it was already in the list, it is moved to the top.
+
+  <li> \textbf{Open URL:} Opens a remote file dialog (see section @ref clientserver)
+
+  <li> \textbf{Save as (Ctrl+S):} Offers a selection dialog to save a copy
+     of a \cube file. Opened \cube file stays loaded in cube. 
+    
+  <li> \textbf{Close (Ctrl+W):} Closes the currently opened \cube file.
+    Disabled if no file is opened.
+
+  <li> \textbf{Open external:} Opens a file for the external percentage
+    value mode (see section @ref valuemodes).
+
+  <li> \textbf{Close external:} Closes the current external file and
+    removes all corresponding data. Disabled if no external file is
+    opened.
+
+  <li> \textbf{Settings:} Offers saving, loading, and deletion of global settings.     
+    Global settings don't depend on the loaded cube file and are saved in a system
+    specific format. These settings e.g. store the appearance of the application
+    like the widget sizes, color and precision settings, the order of
+    panes, etc. 
+    
+    "Restore last state" depends on a loaded cube file. If it is 
+    activated, the state of the cube file, e.g. selected and expanded items, is saved before 
+    the cube file is closed and restored after loading.
+
+  <li> \textbf{Screenshot:} The function offers you to save a
+    screen snapshot in a \textsc{PNG} file. Unfortunately the outer frame of the
+    main window is not saved, only the application itself.
+
+  <li> \textbf{Quit (Ctrl+Q):} Closes the application.
+
+  <li> \textbf{Recent files:} The last   \f$  5  \f$   opened files are offered for
+    re-opening, the top-most being the most recently opened one. A
+    full path to the file is visible in the status bar if you move the
+    mouse above one of the recent file items in the menu.
+  </ol>
+  
+<li> \textbf{Display:} The display menu offers the following functions:
+  <ol>
+  <li> \textbf{Dimension order:} As explained above, \cube has three
+    resizable panes. Initially the metric pane is on the left, the call
+    pane is in the middle, and the system pane is on the
+    right-hand side. However, sometimes you may be interested in other
+    orders, and that is what this menu item is about. It offers all
+    possible pane orderings.  For example, assume you would like to see
+    the metric and call values for a certain thread.  In this case,
+    you could place the system pane on the left, the metric pane in the
+    middle, and the call pane on the right, as shown in
+    Figure \figref{order}.  Note that in panes to the left of the
+    metric pane no meaningful valuescan be presented, since they miss a
+    reference metric; in this case values are specified to be
+    undefined, denoted by a ``-'' (minus) sign.
+    
+@img{cube3.png,order,Modified pane order via the menu ''Display => Dimension order'',width=0.80\textwidth}
+
+@img{cube4.png,coloring,Configuration dialog of the default colormap which opened via the menu ''Display => Edit colormap'',width=0.5\textwidth}
+
+
+
+
+  <li> \textbf{Choose/Edit colormap:}
+  	Allows for selection of color maps and changing of color settings in a new dialog.
+  	In the configuration dialog, the \disp{Ok} button applies the
+    settings to the display and closes the dialog, the \disp{Apply}
+    button applies the settings to the display, and \disp{Cancel}
+    cancels all changes since the dialog was opened (even if
+    "Apply" was pressed in between) and closes the dialog.
+    
+    The configuration dialog in Figure \figref{coloring} shows the default color map for Cube. Other colormaps may be added using plugins, see for 
+    example the Advanced Colormap Plugin (@ref AdvancedColorMapPlugin).
+	    At the top of the dialog you see a color legend with some
+	    vertical black lines, showing the position of the color scale
+	    start, the colors cyan, green, and yellow, and the color scale
+	    end. These lines can be dragged with the left mouse button, or
+	    their position can also be changed by typing in some values
+	    between   \f$  0.0  \f$   (left end) and   \f$  1.0  \f$   (right end) below the color
+	    legend in the corresponding spins.
+	
+	    The different coloring methods offer different functions to
+	    interpolate the colors at positions between the   \f$  5  \f$   data
+	    points specified above.
+	
+	    With the upper spin below the coloring methods you can
+	    define a threshold percentage value between   \f$  0.0  \f$   and   \f$  100.0  \f$,
+	    below which colors are lightened. The nearer to the left end of
+	    the color scale, the stronger the lightening (with linear
+	    increase).
+	
+	    With the spin at the bottom of the dialog you can define a
+	    threshold percentage value between   \f$  0.0  \f$   and   \f$  100.0  \f$  , below
+	    which values should be colored white.
+      	
+  	
+@img{tau-value-view.png,tau-value-view,Value view config dialog for tau metrics,width=0.8\textwidth}
+
+<li> \textbf{Customize style sheets} Opens a dialog to define @ref stylesheets to change e.g. the fonts and sizes of GUI elements.
+
+<li> \textbf{Configure value view:} This menu item opens a dialog in which the icon and the textual value representation of the tree items
+  can be configured. Depending on the data type of the selected metric, additional options and additional value view plugins may be available. 
+  For metrics that consist of more than one value, e.g. tau metrics (see figure \figref{tau-value-view}), 
+  the user can select which value should be used for the icon and which values for the following text.  
+    
+    
+  <li> \textbf{Precision:} Activating this menu item opens a
+    dialog for precision settings (see Figure \figref{precision}).
+    Besides \disp{Ok} and \disp{Cancel}, the dialog offers an
+    \disp{Apply} button, that applies the current dialog settings to
+    the display. Pressing \disp{Cancel} undoes \emph{all} changes due
+    to the dialog, even if you already pressed \disp{Apply}
+    previously, and closes the dialog. \disp{Ok} applies the settings
+    and closes the dialog.
+
+    It consists of two parts: precision settings for the tree
+    displays, and precision settings for the selected value info
+    widgets and the topology displays. For both formats, three values
+    can be defined:
+    <ol>
+    <li> \textbf{Number of digits after the decimal point:} As the name
+      suggests, you can specify the precision for the fraction part
+      of the values. E.g., the number   1.234    is displayed as  1.2   
+      if you set this precision to    1, as   1.234  if you set it to
+         3, and as 1.2340 if you set it to 4.
+    <li> \textbf{Exponent representation above   \f$  10^x  \f$   with x:} Here you can
+      define above which threshold scientific notation should be used.
+      E.g., the value 1000 is displayed as  1000 if
+      this value is larger then  3  and as   \f$  1e3  \f$   otherwise.
+    <li> \textbf{Display zero values below   \f$  10^{-x}  \f$   with x:} Due to inexact
+      floating point representation, it often happens that users
+      wish to round down values very near by zero to zero. Here you can
+      define the threshold below which this rounding should take
+      place. E.g., the value  0.0001  is displayed as  0.0001  if
+      this value is larger than  3   and as zero otherwise.
+    <li> \textbf{Use human readable units for bytes and occ:}
+      If enabled, units will be displayed in a human readable format, e.g. MB or GB.
+    </ol>
+
+@img{cube5.png,precision,Display => Precision,width=0.4\textwidth}
+    
+  <li> \textbf{Trees:} This menu offers options to change the contents and the appearance of the items of all trees.
+    <ol>
+    
+    <li> \textbf{Font and colors:} Opens a dialog to define @ref stylesheets to change e.g. the fonts and sizes of GUI elements.
+  
+    <li> \textbf{Configure Tree Item Marker} 
+    In this dialog, you can change the appearance of defined tree item markers.
+    You may choose if the items should be marked with a special background color or with an icon
+    (see @ref TreeItemMarkerPlugin).
+
+    <li> \textbf{Demangle Function Names} (only call trees)
+    If this option is enabled (default), cube tries to demangle function names.
+    
+    <li> \textbf{Shorten Function Names} (only call trees)
+    This menu item opens a dialog in which you can hide parts of long function names. You may hide argument lists and 
+    return values of C++ functions. You may also hide namespaces, class and templates from C++ function names.
+    For Fortran subroutines, module names can be hidden.
+
+    <li> \textbf{Append rank to system tree items}
+    If this option is enabled, the MPI rank is appended to all system tree leafs. This is useful, if the MPI level is hidden or if there is a large amount of threads.
+   </ol>
+
+  <li> \textbf{Optimize width:} Under this menu item \cube offers
+    widget rescaling such that the amount of information shown is
+    maximized, i.e., \cube optimally distributes the available space
+    between its components. You can chose if you would like to stick
+    to the current main window size, or if you allow to resize it.
+  <li> \textbf{ Show synchronization toolbar } 
+  The synchronization of several cube instances is described in @ref ssync.
+  <li> \textbf{ Show bookmark toolbar }
+  Shows a toolbar which allows you to save the current state of a loaded cube file along with a name and a textual description. The state implies e.g. the currenly selected items, the value mode of the trees,
+  the active tabs and the state of the plugins.
+  These states are saved next to the opened cube file in \textit{cubebasename}.ini.
+  <li> \textbf{ Enable presentation mode }
+  If the presentation mode is enable, a mouse icon is shown next to the cursor
+
+ </ol>
+
+
+<li> \textbf{Plugins:} The plugin menu allows the user to define which plugins are laoded. 
+For each loaded plugin, a submenu is added. The submenu contains a menu item to enable or 
+disable the plugin and the plugin may add additional menu items.
+  <ol>
+    
+    <li> \textbf{Initial activation settings:} Opens a dialog to define which plugins should be loaded.
+    <li> \textbf{Activate/deactivate plugins:} Allows to activate or deactive a plugin for the current session.
+  </ol>
+
+<li> \textbf{Help:} The help menu provides help on usage and gives some
+  information about \cube.
+  <ol>
+  <li> \textbf{Getting started:} Opens a dialog with some basic information
+    on the usage of \cube.
+
+  <li> \textbf{Mouse and keyboard control:} Lists mouse and keyboard
+    controls as given in Section @ref control.
+
+  <li> \textbf{What's this?:} Here you can get more specific information
+    on parts of the \cube GUI. If you activate this menu item, you
+    switch to the ``What's this?'' mode. If you now click on a widget,
+    an appropriate help text is shown. The mode is left when help is
+    given or when you press Esc. 
+
+    Another way to ask the question is to move the focus to the
+    relevant widget and press Shift+F1.
+
+  <li> \textbf{About:} Opens a dialog with release information.
+  
+
+  <li> \textbf{Plugin info} Shows information about the plugin version, a short description and
+                            its location in the file system
+  <li> \textbf{Plugin documentation} shows the plugin documentation in a browser window
+
+  <li> \textbf{Selected metric description:} Opens a new window showing
+    the description of the currently selected metric, equivalent to 
+    \emph{Documentation} in the metric-tree context menu.
+    Disabled if online documentation is unavailable.
+
+  <li> \textbf{Selected region description:} Opens a new window showing
+    the description of the currently selected region, equivalent to
+    \emph{Documentation} in the call-tree context menu.  
+    Disabled if online documentation is unavailable.
+
+ 
+  </ol>
+</ol>
+
+
+
+@subsection valuemodes Value modes
+
+Each tree view has its own value mode combobox, a drop-down menu above
+the tree, where it is possible to change the way the severity values
+are displayed.  
+
+The default value mode is the \textbf{Absolute} value mode. In this
+mode, as explained below, the severity values from the \cube
+file are displayed. However, sometimes these values may be hard to
+interpret, and in such cases other value modes can be applied.
+Basically, there are three categories of additional value modes. 
+<ul>
+<li> The first category presents all severities in the tree as percentage
+  of a reference value. The reference value can be the absolute
+  value of a selected or a root node from the same tree or in
+  one of the trees on the left-hand side. For example, in the \textbf{Own root percent} 
+value mode the severity values are presented as
+  percentage of the own root's (inclusive) severity value. This way
+  you can see how the severities are distributed within the tree.  All
+  the value modes (\ref mode1 "Own root percent" -- \ref mode2 "System selection percent") fall into this category.
+
+  All nodes of trees on the left-hand side of the metric-tree have
+  undefined values. (Basically, we could compute values for them, but
+  it would sum up the severities over all metrics, that have different
+  meanings and usually even different units, and thus those values
+  would not have much expressiveness.) Since we cannot compute
+  percentage values based on undefined reference values, such value
+  modes are not supported. For example, if the call-tree is on the
+  left-hand side, and the metric-tree is in the middle, then the
+  metric-tree does not offer the \textbf{Call root percent} mode.
+<li> The second category is available for system-trees only, and
+  shows the distribution of the values within hierarchy levels. E.g.,
+  the \textbf{Peer percent} value mode displays the severities as
+  percentage of the maximal value on the same hierarchy depth. The
+  value modes (\ref mode3 "Peer percent" -- \ref mode4 "Peer distribution") fall into this category.
+<li> Finally, the \textbf{External percent} value mode relates the
+  severity values to severities from another external \cube file (see
+  below for the explanation).
+</ul>
+
+Depending on the type and position of the tree, the following value modes may be available:
+
+<ol>
+<li> \textbf{Absolute (default):} Available for all
+  trees. The displayed values are the severity value as read from the cube file, in units of measurement (e.g.,
+  seconds).  Note that these values can be negative, too, i.e., the expression
+  ``absolute'' in not used in its mathematical sense here.
+<li> \textbf{Own root percent:} \anchor mode1 Available for all trees.
+  The displayed node values are the percentage of their absolute
+  values with respect to the absolute value of their root node in
+  collapsed state.
+<li> \textbf{Metric root percent:} Available for trees on
+  the right-hand side of the metric-tree. The displayed node values
+  are the percentage of their absolute values with respect to the
+  absolute value of the collapsed metric root node. If there are
+  several metric roots, the root of the selected metric node is taken.
+  Note, that multiple selection in the metric-tree is possible within
+  one root's subtree only, thus there is always a unique metric root
+  for this mode.
+<li> \textbf{Metric selection percent:} Available for trees on the
+  right-hand side of the metric-tree. The displayed node values are
+  the percentage of their absolute values with respect to the selected
+  metric node's absolute value in its current collapsed/expanded
+  state. In case of multiple selection, the sum of the selected
+  metrics' values for the percentage computation is taken.
+<li> \textbf{Call root percent:} Available for trees on the
+  right-hand side of the call-tree. Similar to the metric root
+  percent, but the call-tree root instead of the metric-tree root is
+  considered. In case of multiple selection with different call roots, the
+  sum of those root values is considered.
+<li> \textbf{Call selection percent:} Available for trees on the
+  right-hand side of the call-tree. Similar to the metric selection
+  percent, percentage is computed with respect to the selected call
+  node's value in its current collapsed/expanded state. In case of
+  multiple selections, the sum of the selected call values is
+  considered.
+<li> \textbf{System root percent:} Available for trees on the
+  right-hand side of the system-tree. Similar to the call root
+  percent, the sum of the inclusive values of all roots of selected
+  system nodes are considered for percentage computation.
+<li> \textbf{System selection percent:} \anchor mode2 Available for trees on the
+  right-hand side of the system-tree. Similar to the call selection
+  percent, percentage is computed with respect to the selected
+  system node(s) in its current collapsed/expanded state.
+<li> \textbf{Peer percent:} \anchor mode3 For the system-tree only. The peer
+  percentage mode shows the percentage of the nodes' inclusive
+  absolute values relative to the largest inclusive absolute peer
+  value, i.e., to the largest inclusive value between all entities on
+  the current hierarchy depth. For example, if there are   3  threads
+  with inclusive absolute values  100, 120, and 200, then they
+  have the peer percent values   50, 60, and 100. 
+<li> \textbf{Peer distribution:} \anchor mode4 For the system-tree only. The peer
+  distribution mode shows the percentage of the system nodes'
+  inclusive absolute values on the scale between the minimum and the
+  maximum of peer inclusive absolute values. For example, if there are
+   3 threads with absolute values 100, 120 and 200, then they
+  have the peer distribution values  0, 20 and 100.
+<li> \textbf{External percent:} Available for all trees, if the metric
+  tree is the left-most widget. To facilitate the comparison of
+  different experiments, users can choose the external percentage mode
+  to display percentages relative to another data set. The external
+  percentage mode is basically like the metric root percentage mode
+  except that the value equal to   100% is determined by another data
+  set.
+</ol>
+
+Note that in all modes, only the leaf nodes in the system hierarchy (i.e.,
+processes or threads) have associated severity values. All other hierarchy
+levels (i.e., machines, nodes and eventually processes) are only used to
+structure the hierarchy. This means that their severity is
+undefined---denoted by a ``-'' (minus) sign---when they are expanded.
+
+@subsection subsets System resource subsets
+
+By default, all system resources (typically threads) are included when
+determining boxplot statistics.  Other defined subsets can be chosen
+from the combobox below the boxplot, such as ``Visited'' threads which
+are only those threads that visited the currently selected callpath.
+The current subset is retained until another is explicitly chosen or
+a new subset is defined.
+
+Additional subsets are defined from the system-tree with the
+\emph{Define subset} context menu using the currently selected threads
+via multiple selection (Ctrl+<left-mouse click>) or with the \emph{Find
+Items} context menu selection option.
+
+
+@subsection trees Tree browsers 
+
+A tree browser displays different hierarchical data structures in form
+of trees. Currently supported tree types are metric-trees, call-trees and
+their flat call profiles, and system-trees. The structure of the displayed
+data is common in all trees: The indentation of the tree nodes
+reflects the hierarchical structure. Expandable nodes, i.e., nodes
+with non-hidden children, are equipped with a [+]/[-] sign ([+] for
+collapsed and [-] for expanded nodes). Furthermore, all nodes have a
+color icon, a value, and a label.
+
+The value of a node is computed, as explained earlier, basing on the
+current selections in the trees on the left-hand side and on the current
+value mode. The precision of the value display in trees can be modified,
+see the menu item \emph{Display \submenu Precision} in
+Section @ref smenu. The color icon reflects the position of the node's
+value between \f$ 0.0 \f$ and a maximal value. These  maximal value is the
+maximal value in the tree for the absolute value mode, or \f$ 100.0 \f$ otherwise.
+See the menu item \emph{Display \submenu Choose colormap} in
+Section @ref smenu and the context menu item \emph{Min/max values} in
+the context menu description below for color settings.
+
+A label in the metric-tree shows the metric's name. A label in the
+call-tree shows the last callee of a particular call path. If you want
+to know the complete call path, you must read all labels from the root
+down to the particular node you are interested in. After switching to
+the flat profile view (see below), labels in the flat call profile
+denote methods or program regions. A label in the system-tree shows
+the name of the system resource it represents, such as a node name or
+a machine name. Processes and threads are usually identified by a
+rank number, but it is possible to give them specific names when creating a
+\cube file. The thread level of single-threaded applications is
+hidden. Multiple root nodes are supported.
+
+After opening a data set, the middle panel shows the call-tree of the
+program. However, a user might wish to know which fraction of a metric
+can be attributed to a particular region (e.g., method) regardless of
+from where it was called. In this case, you can switch from the
+call-tree view (default) to the flat-profile view
+(Figure \figref{region}).  In the flat-profile view, the call-tree
+hierarchy is replaced with a source-code hierarchy consisting of two
+levels: regions and their subroutines. Any subroutines
+are displayed as a single child node labeled \emph{ Subroutines}. A subroutine node represents all regions
+directly called from the region above. In this way, you are able to
+see which fraction of a metric is associated with a region
+exclusively, that is, without its regions called from there.
+
+
+Tree displays are controlled by the left and right mouse buttons and some
+keyboard keys.  The left mouse button is used to select or expand/collapse
+a node: You can expand/collapse a node by left-clicking on the attached
+[+]/[-] sign, and select it by left-clicking elsewhere in the node's
+line.  To select multiple items, Ctrl+<left-mouse click> can be used.
+Selection without the Ctrl key deselects all previously selected nodes and
+selects the clicked node.  In single-selection mode you can also use the
+up/down arrows to move the selection one node up/down. The right mouse
+button is used to pop up a context menu with node-specific information,
+such as online documentation (see the description of the context menu
+below).
+
+@img{cube7.png,region,\cube flat profile,width=0.8\textwidth}
+
+
+Each tree has its own context menu which can be activated by a
+right mouse click within the tree's window. If you right-click on one
+of the tree's nodes, this node gets framed, and serves as a
+\emph{reference node} for some of the menu items. If you click outside
+of tree items, there is no refernce node, and some menu items are
+disabled.
+
+The context menu consists, depending on the type of the tree, of some
+of the following items. If you move the mouse over a context menu
+item, the status bar displays some explanation of the functionality of
+that item.
+
+<ol>
+
+<li> \textbf{Collapse all:} Collapses all nodes in the tree.
+
+<li> \textbf{Collapse subtree:} Enabled only if there is
+  a reference node. It collapses all nodes in the subtree of the
+  reference node (including the reference node).
+
+\medskip
+
+<li> \textbf{Expand all:} Expands all nodes in the tree.
+<li> \textbf{Expand subtree:} Enabled only if there is a
+  reference node. Expands all nodes in the subtree of the reference node
+  (including the reference node).
+<li> \textbf{Expand largest:} Enabled only if there is a
+  reference node. Starting at the reference node, expands its child with
+  the largest inclusive value (if any), and continues recursively with
+  that child until it finds a leaf. It is recommended to collapse all
+  nodes before using this function in order to be able to see the path
+  along the largest values.
+<li> \textbf{Expand marked:} Shows all marked nodes by expanding their parents (see @ref TreeItemMarkerPlugin).
+<li> \textbf{Expand current level:} For system-trees only. Shows all nodes that are on the same
+hierarchy level as the chosen one by expanding their parents.
+
+
+<li> \textbf{Dynamic hiding:} Not available for metric-trees. This menu
+  item activates dynamic hiding. All currently hidden nodes get
+  shown. You are asked to define a percentage threshold between
+  \f$ 0.0 \f$ and  \f$ 100.0 \f$. All nodes whose color position on the color
+  scale (in percent) is below this threshold get hidden. As default
+  value, the color percentage position of the reference node is
+  suggested, if you right-clicked over a node. If not, the
+  default value is the last threshold. The hiding is called dynamic,
+  because upon value changes (caused for example by changing the node
+  selection) hiding is re-computed for the new values.  In other
+  words, value changes may change the visibility of the nodes.
+
+  <ol>
+  <li> \textbf{Redefine threshold:} This menu item is enabled if
+    dynamic hiding is already activated. This function allows to
+    re-define the dynamic hiding threshold as described above.
+  </ol>
+
+  During dynamic hiding, for expanded nodes with some hidden children
+  and for nodes with all of its children hidden, their displayed
+  (exclusive) value includes the hidden children's inclusive value.
+  The percentage of the hidden children is shown in brackets next to this
+  aggregate value.
+
+<li> \textbf{Static hiding:} Not available for metric-trees. This menu
+  item activates static hiding. All currently hidden nodes stay
+  hidden. Additionally, you can hide and show nodes using the now
+  enabled sub-items:
+  <ol>
+  <li> \textbf{Static hiding of minor values:} Enabled only in the
+    static hiding mode. As described under dynamic hiding, you are
+    asked for a hiding threshold. All nodes whose current color
+    position on the color scale is below this percentage threshold get
+    hidden. However, in contrast to dynamic hiding, these hidings are
+    static: Even if after some value changes the color position of a
+    hidden node gets above the threshold, the node stays hidden.
+  <li> \textbf{Hide this:} Enabled only in the static hiding mode if
+    there is a reference node. Hides the reference node.
+  <li> \textbf{Show children of this:} Enabled only in the static hiding
+    mode if there is a reference node. Shows all hidden children of
+    the reference node, if any.
+  </ol>
+
+  Like for dynamic hiding, for expanded nodes with some hidden children
+  and for nodes with all of its children hidden, their displayed
+  (exclusive) value includes the hidden children's inclusive value. The
+  percentage of the hidden children is shown in brackets next to this
+  aggregate value.
+
+
+
+<li> \textbf{No hiding:} Not available for metric-trees. This menu
+  item deactivates any hiding, and shows all hidden nodes.
+
+\medskip
+
+<li> \textbf{Find items:} For all trees. Opens a text input widget below the corresponding tree 
+  to enter a regular expression to search for. If the user called the context menu over
+  an item, the default text is the name of the reference node.
+  All non-hidden nodes whose names contain the given expression are marked with a yellow background, 
+  and all collapsed nodes whose subtree contains such a non-hidden node by a light yellow background.
+
+  The button \emph{expand all} expands all found items.
+
+  The button \emph{select all} selects all found items. The selected items may still be collapsed. 
+  
+  The arrow buttons select the next or the previous found item. The shortcuts for these actions are F3 and Shift+F3.
+
+<li> \textbf{Clear found items:} For all trees. Removes the background
+  markings of the preceding "find items" action.
+  
+\medskip
+
+<li> \textbf{Define subset:} Only for system-tree.  Uses the currently
+  selected system resources (e.g., from a preceding \emph{Find items}) to
+  create a new subset of all system resources (typically threads) with
+  the provided name.  This is added to the combobox at the bottom
+  of the system-tree and boxplot statistics panes, and becomes the
+  currently active subset for which statistics are calculated.
+\medskip
+
+<li> \textbf{Info/Documentation:} For metric and call-trees 
+ Shows combined information about the selected metric an call-tree items in a new tab.
+ For the selected metric, information about display, unique name, data type, unit of measurements and kind of metric 
+ is shown. If the metric is derived, the CubePL expression is shown.
+
+ For the selected call path, information about call path id 
+ (to use it with command line tools like \texttt{cube_dump}), region begining line, 
+ region ending line, region module, url with the online help and finally description of the 
+ region is shown.
+ 
+ If online documentation for the reference node is available, it is shown in a html widget below the 
+ informataion panels. For example, metrics might point to an online documentation
+  explaining their semantics, or regions representing library
+  functions might point to the corresponding library documentation.
+  
+ Disabled, if not clicked over metric or call path item.
+ 
+@img{loop.png,looplabel, The item main_loop with 1000 iteration is marked as a loop. The aggregated view on the right is the result of selecting ''Hide iterations''. ,width=0.72\textwidth} 
+
+<li> \textbf{Hide iterations:} Only visible for calltree items that are recognized
+or manually defined as loop (see "Set as loop" below).
+By activating, all children of the loop are hidden. The grandchildren are shown 
+and its values for the different iterations are aggregated (see Figure\figref{looplabel}).
+
+<li> \textbf{Call site:} For call-trees only. Enabled only if there is a
+  reference node. Offers information about the caller of the reference
+  node.
+  <ol>
+  <li> \textbf{Location:} Displays information about the module and position
+    within the module (line numbers) of the caller of the reference
+    node. 
+  <li> \textbf{Set as loop:} Marks the selected tree item as loop. All subitems are
+       treated as iterations. An additional context menu item "Hide iterations" appears.
+  </ol>
+
+<li> \textbf{Called region:} For call-trees only. Enabled only if there
+  is a reference node. Offers information about the reference node.
+  <ol>
+  <li> \textbf{Info:} Gives some short information about the reference node.
+  <li> \textbf{Documentation:} Shows some (usually more
+    extensive) online description for the reference node. Disabled if no
+    online documentation is available.
+  <li> \textbf{Location:} Displays information about the module and position
+    within the module (line numbers) where the callee method of the
+    reference node is defined. 
+  </ol>
+
+<li> \textbf{Min/max values:} Not for metric-trees. Here you can
+  activate and deactivate the application of user-defined minimal and
+  maximal values for the color extremes, i.e., the values
+  corresponding to the left and right end of the color legend. If you
+  activate user-defined values for the color extremes, you are asked
+  to define two values that should correspond to the minimal and to
+  the maximal colors. All values outside of this interval will get the
+  color gray. Note that canceling any of the input windows causes no
+  changes in the coloring method. If user-defined min/max values are
+  activated, the selected value information widget (see
+  Section @ref valueinfo) displays a ``(u)'' for ``user-defined''
+  behind the minimal and maximal color values.
+
+<li>\textbf{Statistics:} Only available if a statistics file for the current
+  \cube file is provided. Displays statistical information about the
+  instances of the selected metric in the form of a box plot. For
+  an in-depth explanation of this feature see subsection @ref statistics.
+
+<li>\textbf{Max severity in trace browser:} Only available for metric and
+  call-trees and only if a statistics file providing information about the
+  most severe instance(s) of the selected metric is present. If \cube is
+  already connected to a trace browser (via \emph{File} \submenu
+  \emph{Connect to trace browser}), the timeline display of the trace browser
+  is zoomed to the position of the occurrence of the most severe pattern so
+  that the cause for the pattern can be examined further.  For a more
+  detailed explanation of this feature see subsection @ref tracebrowser.
+
+  <li> \textbf{Cut call tree/Cut selected call tree items}
+  This context menu is enabled, if the right mouse button is pressed on a call tree item.
+  If the mouse button is pressed and the item below the mouse pointer is part of a group of selected items,
+  the action affects all selected items. Otherwise, only the item below the mouse item will be modified.
+  The menu offers different modification possibilities:
+  <ol>
+  <li> \textbf{Set as root:} Removes all call pathes above the selected items and
+  sets selected call pathes as a root nodes.
+  <li> \textbf{Prune element:} Removes the selected items and all their children.
+  Their inclusive value will be added then to the exclusive value of their parents.
+  <li> \textbf{Set as leaf:} Removes all children of the elements and shows the inclusive values.
+  <li> \textbf{Undo} Undo last operation.
+  </ol>
+  
+
+<li> \textbf{Sort by inclusive/exclusive value (descending):} 
+  Sorts the nodes by their current values in descending order. The items
+  will be automatically sorted, if the values change. If "Apply now" is selected,
+  the values are only sorted once.
+<li> \textbf{Sort by name (ascending):} 
+  Sorts the nodes alphabetically by name in ascending order.
+<li> \textbf{Sort by name and trailing number (ascending):} For system tree only.
+  Sorts the nodes alphabetically by name and the trailing rank in ascending order.
+<li> \textbf{Sort by order of definition:} 
+  Restores the original order.
+
+</ol>
+
+
+@subsection valueinfo Selected value info
+
+
+Below each pane there is a selected value information widget. If no
+data is loaded, the widget is empty.  Otherwise, the widget displays
+more extensive and precise information about the selected values in
+the tree above. This information widget and the topologies may have different
+precision settings than the trees, such that there is the possibility
+to display more precise information here than in the trees (see
+Section @ref smenu, menu \emph{Display \submenu Precision}).
+
+The widget has a 3-line display. The first line displays at most 4
+numbers. 
+The left-most number shows the smallest
+value in the tree (or \f$ 0.0 \f$ in any percentage value mode for trees,
+or the user-defined minimal value for coloring if activated), and the
+right-most number shows the largest value in the tree (or \f$ 100.0 \f$ in
+any percentage value mode in trees, or the user-defined maximal value
+for coloring if activated).  Between these two numbers the current
+value of the selected node is displayed, if it is defined.
+Additionally, in the absolute value mode it is followed by the
+percentage of the selected value on the scale between the minimal and
+maximal values, shown in brackets.
+Note that the values of expanded non-leaf system nodes and of nodes of
+trees on the left-hand side of the metric-tree are not defined. If the
+value mode is not the absolute value mode, then in the second 
+line similar information is displayed for the absolute values in a
+light gray color.
+
+In case of multiple selection, the information refers to the sum of all
+selected values. In case of multiple selection in system
+trees in the peer distribution and in the peer percent modes, this sum
+does not state any valuable information, but is displayed for
+consistency reasons.
+
+If the widget width is not large enough to display all numbers in the
+given precision, then a part of the number displays get cut down and a
+`` \f$ \ldots \f$ '' indicates that not all digits could be displayed.
+
+Below these numbers, in the third line, a small color bar shows the
+position of the color of the selected node in the color legend. In
+case of undefined values, the legend is filled with a gray grid.
+
+@subsection colorlegend Color legend
+
+By default, the colors are taken from a spectrum ranging from blue over
+cyan, green, and yellow to red, representing the whole range of possible
+values.  You can change the color settings in the menu,\disp{Display
+\submenu Choose colormap},  see Section @ref smenu. Exact zero values
+are represented by the color white (in topologies you can decide whether
+you would like to use white or the minimal color, see
+Section @ref SystemTopologyPlugin, menu \disp{Topology}).
+
+@subsection status Status Bar
+
+The status bar displays some status information, like state of
+execution for longer procedures, hints for menus the mouse pointing at
+etc. 
+
+The status bar shows the most recent log message. By clicking on it,
+the complete log becomes visible.
+
+
+@page splugins Cube GUI Plugins
+
+The features of cube can be extended using plugins. There is a set of 
+predefined plugins which are described in the following sections.
+Before a cube file is loaded, the Plugin menu only contains the menu items
+"Configure plugin search path" and "Initial activation settings". 
+@img{pluginMenu.png,pluginMenu,plugin menu,width=0.4\textwidth} 
+
+By Selecting the second item, a dialog is created which lists
+all available plugins (see Figure \figref{pluginSettings}).
+
+@img{plugins.png,pluginSettings,plugin settings dialog,width=0.3\textwidth} 
+
+You may enable or disable all plugins, or select individual plugins that will be
+activated or deactivated.
+After loading a cube file, all suitable plugins are activated. Each plugin may add a submenu
+(see Figure \figref{pluginMenu}) to the Plugins menu.
+
+
+Cube searches for plugins in the directory "cube-plugins/" below the installation directory. This is the place
+where the predefined plugins are installed.
+If the environment variable CUBE_PLUGIN_DIR contains a colon or semicolon separated list of pathes, these pathes are
+prepended to the default search path.
+
+@img{pluginPath.png,pluginpath,plugin search path dialog,width=0.8\textwidth} 
+
+Selecting "Configure plugin search path" of the plugin menu shows a dialog (see Figure \figref{pluginpath}), which allows to prepend 
+additional search pathes. The directory icon on the right opens a file browser whose selection is added to the input line on top and
+which is added to the path with the "add" button.
+
+
+@section detach Detach Plugin Tabs
+@img{detach.png,detachimg,Boxplot plugin tab is detached,width=.8\textwidth} 
+By clicking with the right mouse button on a plugin tab, the contents of the tab are moved to a 
+separate window (see Figure \figref{detachimg}). If the window is
+closed, the contents are moved to the tab widget again.
+
+@seclist
+    @secitem{contextfreeplugins}
+    @secitem{AdvancedColorMapPlugin}
+    @secitem{MetricEditorPlugin}
+    @secitem{MetricIdentificationPlugin}
+    @secitem{ScorepCfgPlugin}
+    @secitem{SourceCodeViewerPlugin}
+    @secitem{SystemBarplotPlugin}
+    @secitem{SystemHeatmapPlugin}
+    @secitem{SystemStatisticsPlugin}
+    @secitem{SystemSunburstPlugin}
+    @secitem{SystemTopologyPlugin}
+    @secitem{TreeItemMarkerPlugin}
+@endseclist
+
+@page contextfreeplugins Context free plugins
+Context free plugins are available via menu "File -> Start" as long no Cube is loaded in Cube GUI. 
+Is one Cube file is loaded, one should close it using "File -> Close". 
+
+@section diffplugin Plugin "Diff"
+@img{plugin_diff.png,diff,Plugin Diff,width=0.5\textwidth}
+
+This plugin allows to perform algebra operation "difference" on two selected cubes and displays result in Gui.
+
+@section meanplugin Plugin "Mean"
+This plugin allows to perform algebra operation "mean" on selected cubes and displays result in Gui.
+
+@section mergeplugin Plugin "Merge"
+This plugin allows to perform algebra operation "merge" on selected cubes and displays result in Gui.
+
+@section scalingplugin Plugin "Scaling"
+This plugin allows user to do a simple scaling analysis. One selects a directory with the series of measurements. "Scaling" 
+plugin creates a scaling profile, where metric and call-trees are identical (merged) with the input measurements, and the 
+system-tree is an artificial scaling tree. Every entry in it corresponds to a singe measurement. In couple with the 
+"Jenga Fett" plugin ( third party, www.scalasca.org) result is displayed as a series of stacked bars and allows the user to 
+analysis the scaling behavior of the application.
+
+
+@section tau2cubeplugin Plugin "Tau2Cube"
+This plugin allows user to open TAU Profile Directory using Cube Gui and explore it in casual way.
+
+//================================================================================================================================
+
+@page AdvancedColorMapPlugin Advanced Color Map Plugin
+
+
+Advanced Color Map Plugin provides additional color maps. The configuration dialogs are presented in Figure
+    	\figref{coloring_acm}. For every color map, the plot allows for change of data accepted by color map and one can do that
+    	using left and right marker, by dragging the marker or providing exact position 
+    	through a double click near the marker value (new dialog will appear). The default color for values out of range is grey. <br>
+    	One can change colors of scheme (for some color maps) and color for values out of range. Double mouse click on proper part of the plot opens a dialog with selection of RGB color. Additionally, one can
+    	adjust the plot marker or reset to default values through the context menu. 
+
+    	@img{acm_collage.png,coloring_acm, The examples of configuration for Advanced Color Maps. Upper row\, starting from left: sequential\, divergent; lower row\, starting from left: cubehelix\, improved rainbow.,width=0.4\textwidth}
+
+Currently the plugin adds four different sets of color maps:
+    	<ol>
+	    <li> \textbf{Sequential:} 
+		    Scheme is defined by starting and ending color with linear or exponential interpolation between them. Predefined schemes
+		    provide simple interpolation from one color to pure white. Middle marker allows for subtle change of interpolation.
+	   
+	    <li> \textbf{Divergent:}
+		    This scheme is defined by an interpolation from starting to ending color, but with a critical value between them, depicted
+		    with the pure white. The position of critical point can be set with the middle marker.
+		<li> \textbf{Cubehelix:}
+	    Scheme designed primarily for display of astronomical intensity images. The coloring is based on distribution
+	    from black to white, with R, G and B helixes giving additional deviations. Cubehelix is defined by four parameters: <br>
+		\textit{Start colour} - starting value for color, floating-point number between 0.0 and 3.0. R = 1, G = 2, B = 0 <br>
+		\textit{Rotations} - floating-point number of R -> G -> B rotations from the start to the end. Negative value corresponds to 
+		negative direction of rotation. <br>
+		\textit{Hue} - non-negative value which controls saturation of the scheme, with pure greyscale for hue equal to 0. <br>
+		\textit{Gamma factor} - non-negative value which configures intensity of colours. Values below one emphasizes low intensity values and creates brighter color scheme. Values above one emphasizes
+		high intensity values and generates darker color map. <br>
+		\textbf{Reference:} Green, D. A., 2011, `A colour scheme for the display of astronomical intensity images', 
+		Bulletin of the Astronomical Society of India, 39, 289.
+	    <li> \textbf{Improved rainbow colormap:} 
+	    Set of color maps based on original jet (rainbow) scheme, but with different lightness distribution. The goal behind
+	    these schemes is to provide map with more balanced perception, which is poor for original jet, mainly because of sharp changes
+	    in lightness. These maps doesn't provide any possibility for configuration. <br>
+		\textbf{Reference:}  Perceptually improved colormaps, MATLAB Central
+    	</ol>
+
+
+@page TreeItemMarkerPlugin Tree Item Marker
+A plugin may define one or more tree item marker to tag items of interest.
+
+Tree items are marked in different ways:
+<ul>
+  <li>Items with a colored background show that a plugin has set a marker
+  <li>Items with a colored frame indicate that a collapsed child has been marked.
+  <li>Items with a black frame indicate that there are several collapsed children with different marker.
+  <li>Items with a dotted frame show a dependency. A marked item of the right neighbor tree depends on
+  <li>Items can be grayed out. These items are either marked as unimportant by a plugin, or the user has choosen to gray out all items,
+  for which no marker is set.
+  this item. The dependent item is only marked, if the dotted item is selected.
+</ul>
+
+@img{marker.png,marker,tree item marker,width=0.8\textwidth} 
+
+The figure \figref{marker} shows two plugins which define marker. 
+The Statistic Plugin marks all items with information about the most severe instances with a blue background and an icon. The Launch Plugin uses
+green marker and does not define an icon. Both of them use marker for items of the system-tree and for items of the call-tree that depend on items 
+of the system-tree.
+
+The Tree Item Marker dialog (see figure \figref{pluginMenu}) allows the user to change the color of each marker, to disable the drawing of
+colors or icons and to emphasize the marked items by graying out the other items.
+
+
+
+
+
+@page SourceCodeViewerPlugin Source Code Viewer
+
+The Source code viewer plugin (see figure \figref{sourceplugin}) displays the source code of the selected call-tree item.
+The file is opened in read-only mode per default. If you wish to edit the text, please uncheck the
+\disp{Read only} box in the plugin menu. The menu item "Set external editor" allows to open the source file
+with an external editor.
+
+
+@img{plugin_source.png,sourceplugin,Source code viewer plugin,width=0.8\textwidth}
+
+If \cube doesn't find the file at its original location, a button to open a file dialog is displayed. The new location of the source files is
+saved in the global settings.
+
+The context menu (right mouse button) shows following options: 
+  <ol>
+    <li>\textbf{Copy} copies the selection to the clipboard
+    <li>\textbf{Select All} selects the whole source file
+    <li>\textbf{Find} adds an additional widget at the bottom ot the viewer to search inside the source code
+    <li>\textbf{Open in external editor} opens an external editor, after it is configured
+    </li>
+  </ol>  
+  
+General options can be set in the plugin menu (Plugins->SourceCodeViewer).
+  <ol>
+    <li>\textbf{Set font} Change the default viewer font
+    <li>\textbf{Read only} The default viewer mode is read only. You can enable editing here.
+    <li>\textbf{Set external editor} This options allows to select one of the predefined external editors or define a new one.
+    </li>
+  </ol>  
+
+@section control Source Code Viewer Keyboard control
+
+Control in read only mode:
+
+<table>
+  <tr><td>  Up Arrow </td><td> Move one line up </td></tr>
+  <tr><td>  Down Arrow </td><td> Move one line down </td></tr>
+  <tr><td>  Left Arrow </td><td>  Scroll one character to the left (if horizontally scrollable)</td></tr>
+  <tr><td>  Right Arrow </td><td> Scroll one character to the right (if horizontally scrollable)</td></tr>
+  <tr><td>  Page Up </td><td> Move one (viewport) page up </td></tr>
+  <tr><td>  PageDown </td><td> Move one (viewport) page down </td></tr>
+  <tr><td>  Home  </td><td> Move to the beginning of the text </td></tr>
+  <tr><td>  End </td><td> Move to the end of the text </td></tr>
+  <tr><td>  < scroll mouse-wheel > </td><td> Scroll the page vertically</td></tr>
+  <tr><td>  Alt+< scroll mouse-wheel > </td><td> Scroll the page horizontally (if horizontally scrollable)</td></tr>
+  <tr><td>  Ctrl+F </td><td> Find text </td></tr> 
+  <tr><td>  Ctrl+< scroll mouse-wheel > </td><td> Zoom the text </td></tr>
+  <tr><td>  Ctrl+A </td><td> Select all text </td></tr> 
+</table>
+
+Additionally for the read and write mode:
+
+<table>
+  <tr><td>  Left Arrow </td><td>  Move one character to the left </td></tr>
+  <tr><td>  Right Arrow </td><td> Move one character to the right</td></tr>
+  <tr><td>  Backspace </td><td>    Delete the character to the left of the cursor</td></tr>
+  <tr><td>  Delete </td><td>   Delete the character to the right of the cursor</td></tr>
+  <tr><td>  Ctrl+C </td><td>   Copy the selected text to the clipboard</td></tr>
+  <tr><td>  Ctrl+Insert </td><td>  Copy the selected text to the clipboard</td></tr>
+  <tr><td>  Ctrl+K </td><td>   Delete to the end of the line</td></tr>
+  <tr><td>  Ctrl+V </td><td>   Paste the clipboard text into text edit</td></tr>
+  <tr><td>  Shift+Insert </td><td> Paste the clipboard text into text edit</td></tr>
+  <tr><td>  Ctrl+X </td><td>   Delete the selected text and copy it to the clipboard</td></tr>
+  <tr><td>  Shift+Delete </td><td> Delete the selected text and copy it to the clipboard</td></tr>
+ <tr><td>   Ctrl+Z </td><td>   Undo the last operation</td></tr>
+  <tr><td>  Ctrl+Y </td><td>  Redo the last operation</td></tr>
+  <tr><td>  Ctrl+Left arrow </td><td> Move the cursor one word to the left</td></tr>
+  <tr><td>  Ctrl+Right arrow </td><td>    Move the cursor one word to the right</td></tr>
+ <tr><td>   Ctrl+Home </td><td>   Move the cursor to the beginning of the text</td></tr>
+ <tr><td>   Ctrl+End </td><td>    Move the cursor to the end of the text</td></tr>
+ <tr><td>   Hold Shift + some movement (e.g., Right arrow) </td><td> Select region </td></tr>
+</table>
+
+
+
+
+@page MetricEditorPlugin Metric Editor Plugin
+  The metric editor plugin allows to create derived metrics as root or child metrics. To create or edit such a metric,
+  use the right mouse button to show the context menu of the metric-tree. Then select the menu item
+  "Edit metric->Create derived metric". If the context menu is called on a tree item, the new metric may also be inserted as a child".
+  
+  @img{cubederivedmetrics.png,createderivedmetric,Create derived metric,width=0.4\textwidth}
+  
+  For detailed documentation of CubePL please see \cite{doc_derived_metrics}.
+ 
+ 
+  Some details about the fields in the dialog:
+  <ol>
+    <li>\textbf{Select metric from collection:} Provides a list of predefined derived metric, which might be helpful 
+    for the analysis. A new metric may be added to the collection with the plus button, existing user defined metrics may be updated 
+    that way.
+    </li>
+    <li> \textbf{Derived metric type:} Selects the type of the derived metrics. Available are :
+      \texttt{Postderived metric}, \texttt{Prederived exclusive metric} and \texttt{Prederived inclusive metric}.
+    </li>
+    <li>\textbf{Display name:} Sets the display name of the metric in the metric-tree.</li>
+    <li>\textbf{Unique name:} Sets the unique name of the metric. There is no check done if another metric 
+    is present with the same unique name. </li>
+    <li>\textbf{Data type :} For derived metrics it is preselected and is always \texttt{DOUBLE}. </li>
+    <li>\textbf{Unit of measurement:} Selects a unit of measurement. It is a user defined string. </li>
+    <li>\textbf{URL:} Selects a URL with the documentation about this metric. </li>
+    <li>\textbf{Description:} Describes a metric. </li>   
+    <li>\textbf{Calculation:} Field where one enters the CubePL expression for the
+    derived metric. Automatic syntax check is done. If there is a syntax error, 
+    dialog highlights the place of the error and gives an error message. 
+    </li>   
+    <li>\textbf{Calculation Init:} Field where one enters the initialisation CubePL expression for the
+    derived metric,which is executed only once after metric creation. 
+
+    Automatic syntax check is done. If there is a syntax error, 
+    dialog highlights the place of the error and gives an error message. 
+    </li>       
+    <li>\textbf{Aggregaton "+":}Prederived metrics can specify an expression for the operator "+" in the aggregation formula. In this field one can redefine it. 
+ 
+    Automatic syntax check is done. If there is a syntax error, 
+    dialog highlights the place of the error and gives an error message. 
+    </li>  
+    <li>\textbf{Calculation "-":} Prederived inclusive metric can specify an expression for the operator "-" in the aggregation formula. In this field one can redefine it.
+
+    Automatic syntax check is done. If there is a syntax error, 
+    dialog highlights the place of the error and gives an error message. 
+    </li>  
+    <li>\textbf{Create metric} - This button is only enabled, if all required fields are set, the metric identifier is unique and the syntax is valid.
+    First, the new metric is checked for undefined references. 
+    Other metrics, which are referenced by the new metric and which are part of the collection are inserted automatically. These automatically inserted metrics are hidden. 
+    If all references are resolved, the dialog is closed and a new metric with the given values is created.
+    </li> 
+    
+    <li>\textbf{Cancel} - closes dialog without creating any metric.
+    </li>   
+    <li>\textbf{Share this metric with SCALASCA group} - Offers you to sent the metric definition via email to the SCALASCA group,
+    so it might be included into the library of derived metrics in the future releases. Enabled only if definition of metric is valid.
+    </li> 
+  </ol>
+  
+    To simplify the creation of a derived metric a little bit there is a way to 
+    fill the fields of this dialog automatically. 
+    
+    If one prepares a file with the following syntax one can select it and open 
+    "drop" on dialog via drag'n'drop, or copy its content into clipboard and 
+    paste in the dialog. 
+    
+    Example of a syntax of this file:
+@code
+metric type: postderived
+display name: Average execution time
+unique name: kenobi
+uom:sec
+url: https://scalasca.org/documentation.html#kenobi
+description:Calculates an average execution time
+#
+# Here is the Kenobi metric
+#
+cubepl expression: metric::time(i)/metric::visits(e)
+
+cubepl init expression: 
+
+cubepl plus expression:  arg1 + arg2 
+
+cubepl minus expression: arg1 - arg2
+@endcode
+  \texttt{metric type}  can have values: \texttt{postderived}, \texttt{prederived_exclusive} or \texttt{prederived_inclusive}.
+<ol>
+<li> \textbf{Remove metric} Removes metric from the metric-tree, if it is not used by other metrics.</li> 
+<li> \textbf{Edit metric} It offers a dialog 
+to edit expressions (standard, initialisation, aggregation) of a  derived metric. 
+Enabled if selected metric is a derived metric.
+Window for editing is same like in "Create derived metric" case.
+</li> 
+</ol>
+\medskip
+
+
+@page TreeItemMarkerPlugin Tree Item Marker Plugin
+This plugins adds an element to the context menu which allows to mark tree items manually. This is helpful to relocate the item after other
+selections have been done. The marked items are stored into the experiment specific settings.
+
+@page ScorepCfgPlugin Score-P Configuration Plugin
+This plugin (see Figure \figref{scorepconfigplugin}) presents the file "scorep.cfg",
+if found, in tabullar way. 
+@img{scorepconfigplugin.png,scorepconfigplugin,Score-P Configuration,width=0.8\textwidth}
+Tooltip displays help to every used environment variable with its possible values. 
+
+@page MetricIdentificationPlugin Metric Identification Plugin
+Cube displays relatively many metrics in its "Metric" pane. These metrics have different origin or purpose. 
+They can be generated by Score-P, Scalasca, Cube remapper or be hardware counters. 
+On order to support user to identify which metric origins from which tool, serves which purpose, 
+Cube provides "Metric Identification Plugin" (see Figure \figref{metricidentplugin}) 
+
+@img{metricIdentify.png,metricidentplugin,Metric identification,width=0.8\textwidth}
+Tooltip displays help to every used environment variable with its possible values. 
+
+@page SystemTopologyPlugin System Topology Plugin
+
+In many parallel applications, each process (or thread) communicates
+only with a limited number of processes. The parallel algorithm
+divides the application domain into smaller chunks known as
+sub-domains. A process usually communicates with processes owning
+sub-domains adjacent to its own. The mapping of data onto processes
+and the neighborhood relationship resulting from this mapping is
+called \emph{virtual topology}. Many applications use one or more
+virtual topologies specified as multi-dimensional Cartesian grids.
+
+Another sort of topologies are \emph{physical topologies} reflecting
+the hardware structure on which the application was run.  A typical
+three-dimensional physical topology is given by the (hardware) nodes
+in the first dimension, and the arrangement of cores/processors on
+nodes in further two dimensions. 
+
+
+The \cube display supports multi-dimensional Cartesian grids, where
+grids with high dimensionality can be sliced or folded down to two or
+three dimensions for presentation.  If the currently opened cube file
+defines one or more such topologies, separate tabs are available for
+each using the topology name when one is provided.  The topology display
+shows performance data mapped onto the Cartesian topology of the
+application.  The corresponding grid is specified by the number of
+dimensions and the size of each dimension.  Threads/processes are
+attached to the grid elements, as specified by the \cube file.  Not all
+system items have to be attached to a grid element, and not every grid
+element has a system item attached.  An example of a three-dimensional topology 
+is shown on Figure \figref{topology}.  Note
+that the topology toolbar is enabled when a topology is available to be
+displayed.
+
+@img{cube8.png,topology,Topology Displays,width=0.8\textwidth}
+
+The Cartesian grid is presented by planes stacked on top of each other
+in a three dimensional projection. The number of planes depends on the
+number of dimensions in the grid. Each plane is divided into tiles
+(typically shown as rombi).  The number of tiles depends on the
+dimension size. Each tile represents a system resource (e.g., a
+process) of the application and has a coordinate associated with it.
+
+The current value of each grid element (with respect to the selections
+on the left-hand side and to the current value mode) is represented by
+coloring the grid element.  Coloring is based on a value scale from \f$ 0.0 \f$ to
+\f$ 100.0 \f$.  Grid elements without having a system item attached to it
+are colored gray.  See Section @ref smenu (menu \emph{Topology})
+for further topology-specific coloring settings. For example, the upper
+topology in Figure \figref{topology} is drawn wit black lines, the 2D topology in
+Figure \figref{topology2D} is drawn without lines.
+
+@img{cube2D.png,topology2D,Topology Displays,width=0.8\textwidth}
+
+If the selected system item occurs in the topology, it is marked by an additional frame and
+by additional lines at the side of the plane which contains the
+corresponding grid point, such that the selected item's position is also
+visible if the corresponding plane is not completely visible.
+
+If zooming into planes is enabled, the plane containing the recently selected item is selected 
+and the plane distance is adjusted to show this plane complely.
+
+Selecting a collapsed tree in the system-tree selects all its children in the
+topology view.
+
+Besides the functions offered by the topology toolbar
+(see @ref toolbar), the following functionality is supported:
+<ol>
+<li> \textbf{Item selection:} You can change the current system selection by
+  left-clicking on a grid element which has a system item assigned to
+  it (resulting in the selection of that system item). Multiple items may be 
+  selected or deselected by holding down the Ctrl key while clicking on an item. 
+
+<li> \textbf{Info:} By right-clicking on a grid element, an information widget appears
+  with information about the system item assigned to it. The information contains 
+  <ul>
+  <li> the coordinate of the grid point in each topology dimension, 
+  <li> the hardware node to which the attached system item belongs to,
+  <li> the system item's name,
+  <li> its MPI rank,
+  <li> its identifier,
+  <li> and its value, followed by the percentage of this value on the
+    scale between the minimal and maximal topology values.
+  </ul>
+<li> \textbf{Rotation about the x and y axes:} can be done with left-mouse drag (click and hold the left-mouse
+  button while moving the mouse).
+<li> \textbf{Increasing/decreasing the distance between the planes:} with Ctrl+<left-mouse drag>
+<li> \textbf{Moving the whole topology up/down/left/right:} with Shift+<left-mouse drag>
+</ol>
+
+
+
+@section topomap Topology mapping panel
+ 
+If the number of topology dimensions is larger than three, the first
+three dimensions are shown and an additional control panel appears below
+the displayed topology. This panel allows rearranging topology dimensions
+on the \emph{x}, \emph{y} and \emph{z} axes, as well as slicing or folding of higher
+dimensionality topologies for presentation in three or fewer dimensions.
+
+Rearranging topology dimensions is achieved simply by dragging the topology
+dimension labels to the desired axis.  When dragged on top of an existing
+topology dimension label, the two are exchanged.
+
+When slicing, select up to three of the dimensions to display completely
+and choose one element of each of the remaining dimensions.  The example
+in Figure\figref{example4d} shows a topology with 4 dimensions
+(32x16x32x4) labelled @emph{X}, @emph{Y}, @emph{Z} and @emph{T}. The
+first element of the 4th dimension (\emph{T}) is automatically selected.
+By clicking on the button above the \emph{T}, an index in this dimension
+from 0 to 3 can be chosen. If the index is set to \emph{all}, the
+selection  becomes invalid until an index of another dimension is
+selected.
+ 
+@img{cube-multidim.png,example4d,4-dimensional example,width=0.8\textwidth} 
+
+Alternatively, the folding mode can be activated by clicking on the
+\emph{fold} button. This mode is available for topologies with four to six dimensions and 
+allows to display all elements by folding two dimensions into one.   
+Every dimension appears in a box, with can be dragged into one of the three container boxes
+for the displayed dimensions x, y and z. 
+In folding mode, the color of the inner borders is changed into gray. The black bordered rectangles 
+show the element borders of each of the three displayed dimensions.
+
+The right image in Figure\figref{example4d} shows the folding of dimension Z with dimension T. 
+One element with index (0,0,1,3) has been selected by clicking with the right mouse button into it.
+All elements inside the black rectancle around the selection belong to Z index one. 
+The gray lines devide the rectangle into four elements which correspond to the elements of 
+dimension T with index 0 to 3.
+
+@section stopologymenu Topology plugin menu
+<ul>
+<li> \textbf{Topology:} The topology menu offers the following functions
+    related to the topology display described in Section @ref topology :
+  <ol>
+    <li> \textbf{Item coloring:} Offers a choice how zero-valued system
+      nodes should be colored in the topology display. The two
+      offered options are either to use white or to use white only
+      if all system leaf values are zero and use the minimal color
+      otherwise.
+
+    <li> \textbf{Line coloring:} Allows to define the color of the
+      lines in topology painting. Available colors are black, gray,
+      white, or no lines.
+
+    <li> \textbf{Toolbar:} This menu item allows to specify if the
+      topology toolbar buttons should be labeled by icons, by a text
+      description, or if the toolbar should be hidden. For more
+      information about the toolbar see Section @ref toolbar .
+
+    <li> \textbf{Show also unused hardware in topology:} If not checked,
+      unused topology planes, i.e., planes whose grid elements don't
+      have any processes/threads assigned to, are hidden. Unused plane
+      elements, if not hidden, are colored gray.
+
+    <li> \textbf{Topology antialiasing:} If checked, anti-aliasing is
+      used when drawing lines in the topologies.
+
+    <li> \textbf{Zoom into current plane:} If checked, the plane containing the 
+      recently selected item is shown completely. It is never covered by a neighbor plane. 
+  </ol>
+</li>
+</ul>
+
+@section stoolbar Toolbar
+
+The system pane may contain topology displays if
+corresponding data is specified in the \cube file. Basically, a topology display
+draws a two- or three-dimensional grid, in the form of some planes
+placed one above the other. Each plane consists of a two-dimensional
+grid of processes or threads.
+
+The toolbar is enabled only if the system pane shows a topology
+display, and it offers functions to manipulate the display of the
+above grid planes.  The toolbar can be labeled by icons, by text, or
+it can be hidden, see menu \emph{Topology \submenu Toolbar} in
+Section @ref smenu.  The toolbar buttons have tool tips, i.e., a
+short description pops up if the toolbar is enabled and you move the
+mouse above a button.
+
+The functions are the following, listed from the left to the right in
+the topology toolbar:
+
+<dl>
+<dt> \textbf{Move left} </dt><dd>  
+@htmlpng{left_small.png,40px}
+Moves the whole topology to the left.</dd>
+<dt> \textbf{Move right} </dt><dd> 
+@htmlpng{right_small.png,40px}  
+Moves the whole topology to the right.</dd>
+<dt> \textbf{Move up} </dt><dd> 
+@htmlpng{up_small.png,40px} 
+Moves the whole topology upwards.</dd>
+<dt> \textbf{Move down} </dt><dd>
+@htmlpng{down_small.png,40px} 
+Moves the whole topology downwards.</dd>
+<dt> \textbf{Increase plane distance} </dt><dd>
+@htmlpng{distance1_small.png,40px}  
+Increase the distance between the planes of the topology. </dd>
+<dt> \textbf{Decrease plane distance} </dt><dd>
+@htmlpng{distance2_small.png,40px}  
+Decrease the distance between the planes of the topology.  </dd>
+<dt> \textbf{Zoom in} </dt><dd>
+@htmlpng{zoomin_small.png,40px}  
+Enlarge the topology. </dd>
+<dt> \textbf{Zoom out} </dt><dd>
+@htmlpng{zoomout_small.png,40px}  
+Scale down the topology.</dd>
+<dt> \textbf{Reset} </dt><dd>
+@htmlpng{reset_small.png,40px}   
+Reset the display. It scales the topology such  that it fits into the visible rectangle, and transforms it into a   default position. </dd>
+<dt> \textbf{Scale into window} </dt><dd>
+@htmlpng{scale_small.png,40px}
+   It scales the topology such that it fits into the visible rectangle, without transformations. </dd>
+<dt> \textbf{Set minimum/maximum values for coloring}</dt><dd>
+@htmlpng{user_small.png,40px}   
+Similarly to  the functions offered in the context menu of trees (see  Section @ref trees), you can activate and deactivate the  application of user-defined minimal and maximal values for the color  extremes, i.e., the values corresponding to the left and right end  of the color legend. If you activate user-defined values for the  color extremes, you are asked to define two values that should  correspond to the minimal and to the maximal colors. All values  outside of this interval will get the color gray. Note that  canceling any of the input windows causes no changes in the  coloring method.  If user-defined min/max values are activated, the  selected value information widget displays a ``(u)'' for``user-defined''
+  behind the minimal and maximal color values. </dd>
+<dt> \textbf{x-rotation} </dt><dd>
+Rotate the topology cube about the x-axis with the defined angle.</dd>
+<dt> \textbf{y-rotation} </dt><dd> 
+Rotate the topology cube about the y-axis with the defined angle.</dd>
+<dt> \textbf{Dimension order for the topology displays}</dt><dd>
+This button no longer exists, but formerly allowed the order of topology dimensions to be
+adjusted: this is now done with the control panel at the bottom of the
+topology pane.
+</dl>
+
+Using the grip at the left of the toolbar, it can be dragged to another
+position or detached entirely from the main window.  The toolbar can
+also be closed after a right-click in the grip.
+
+@section tkeyboardcontrol Topology keyboard and mouse control
+<table>
+<tr><td>   <left-mouse click> </td><td>select item</td></tr>
+<tr><td>   <right-mouse click> </td><td>context information </td></tr>
+<tr><td>   Ctrl+<left-mouse drag> </td><td>increase plane distance </td></tr>
+<tr><td>   Shift+<left-mouse drag> </td><td>move topology </td></tr>
+<tr><td>   < scroll mouse-wheel > </td><td>zoom in/out </td></tr>
+<tr><td>  <left-mouse drag> </td><td> rotate topology </td></tr>
+<tr><td>   Up arrow </td><td>scroll one unit up </td></tr>
+<tr><td>   Down arrow </td><td>scroll one unit down </td></tr>
+<tr><td>  Page up </td><td>scroll one page up </td></tr>
+<tr><td>  Page down </td><td>scroll one page down </td></tr>
+</table>
+
+
+@page SystemBarplotPlugin System Barplot Plugin
+
+BARPLOT plugin is a \cube plugin that plots vertical bar graph for the \cube file which has iterations. Horizontal axis shows different iterations being compared and on vertical axis, several operations can be used to represent the value. The User can apply different metrics and call paths on the bar graph.
+
+@section barplot_basics Basic Principles
+
+As a start point, it should be mentioned that BARPLOT works only on a \cube file that has iterations. For those files which have not, user would face the warning on the terminal : \disp{ "No iterations for Barplot"} and the plugin will not be shown.
+
+By loading the plugin, on \emph{system dimension}, the corresponding tab, \emph{ Barplot}, will be added. In the \emph{ Barplot} tab, the user can select different operations and assign desired color to them. Figure \figref{barplot1} displays a view of it.
+
+@img{Barplot1.png,barplot1,BARPLOT display window,width=0.8\textwidth}
+
+User can select different metrics such as \emph{Visits} and \emph{Time}, by clicking on them in \emph{metric dimension}. In addition, it is possible to get a BARPLOT for different \emph{call paths} of iterations, via clicking on them. However, for \emph{call paths} that are not located in iterations, like \emph{input_in} in figure \figref{barplot2}, no bar graph is displayed and user face the message \disp{"No data to display"} on the window.
+
+@img{Barplot2.png,barplot2,No data to display,width=0.8\textwidth}
+
+Furthermore, the values on BARPLOT, can be evaluated in \emph{Inclusive} and \emph{Exclusive} manner. Therefore, user can easily collapse the tree on \emph{call path} and click on the desired path to get the exclusive value of it.
+
+Additionally, the exact calculated values can be seen by clicking left button of mouse on the desired position on the graph, a tooltip would display a value corresponding to the iteration.
+
+In a situation that user needs to store the graph, it is just needed to do right click on a graph, and select \disp{"Save as image"}, then the \emph{Save dialog} will be opened to specifying the path and name of the \textsc{PNG} file.
+
+@section barplottoolbar Toolbar
+On the top of the Barplot space, there is a toolbar that allows user to specify the kind of an operation and its color(Figure \figref{toolbar}).
+
+@img{barplot_toolbar.png,toolbar,BARPLOT toolbar,width=0.5\textwidth}
+
+By \emph{operation} item, the user can select different operations, \emph{Minimum}, \emph{Maximum}, \emph{Average}, \emph{Median}, \emph{1st Quartile} and \emph{3rd Quartile} or the combination of \emph{Maximum}, \emph{Minimum} and \emph{Average}. This provides the situation for the user to have different values for comparing at one time. These operations are done on all threads in each iterations. For instance, by \emph{Minimum} operation, the minimum value among the existing threads for each iteration, is calculated and plotted. They are kind of statistical measurements. 
+
+\emph{Color} item offers a color for an \emph{operation}, however for each \emph{operation}, a default color is assigned automatically. By changing the \emph{operation}, corresponding color will be shown on \emph{color} combo box. In a situation that different bar graphs are overlaid on each other, each graph will be shown by different color in order to distinguish various graphs. 
+
+In addition to above items, two buttons are also designed to manage the order of the bar graphs.
+
+\emph{Keep on Stack:} It is possible that user intents to compare different graphs by laying them on each other. For this matter, a push-button \emph{keep on stack} is defined. Generally, by clicking on each \emph{call path} or \emph{metric}, a responding graph is replaced the previous one in the stack. In a situation, that the user intends to compare the next graph by the existing one, at one time, it is needed to click on the button \emph{keep on the stack}, then the next graph will be added over the previous one, or in another words, it is overlaid on the last graph. If its values are less than the previous graph, user can see two graphs by different colors that help him/her in comparing, and in a situation that new values are greater than previous one, the new one will cover the previous with fresh color. Therefore, for keeping the top row of the stack, the user should click on the \emph{keep the stack} button, otherwise the coming values will replace the last one.
+ 
+\emph{Clean Stack:} By clicking this button, all displayed graphs, are erased and the stack will be empty.
+
+@section barplotmenu Menu Bar
+
+\emph{Plugin} menu offers the general function to enable or disable a plugin, and specific functions for each plugin.
+\emph{Barplot plugin} provides the following functions in two areas, Measurement Customization and Threads Ruler Customization(Figure \figref{barplotmenupic}).
+
+@img{barplot_menu.png,barplotmenupic,BARPLOT menu,width=0.4\textwidth}
+
+\textbf{Ruler Customization:}  User can modify the number of major and minor ticks of the ruler on vertical axis.
+For adjusting the major vertical ticks, user can set the drawing intervals or the number of ticks.
+By specifying the number of major ticks, the length of the vertical axis will be divided to the specified number and major ticks are drawn by length longer than minor ticks. Then in each divided length, if there is enough space, the specified number of minor ticks will be displayed.
+It is possible that the user set major ticks by interval. In order to do that, select the major ticks by interval option, and set the interval value. Therefore, after each interval, one major tick will be drawn. 
+
+
+
+\textbf{Top Notch Value:}  The value of the top notch on a vertical axis can be altered by user as well as automatically. Therefore, due to scale issue, it can affect on the drawing of the graph.
+
+\textbf{Button Notch Value:} The value of the button notch on a vertical axis can be altered by user as well as automatically. Therefore, due to scale issue,it can affect on the drawing of the graph.
+
+\textbf{Iterations Ruler Customization:} User can modify the number of major and minor ticks of the ruler on horizontal axis.
+For adjusting the major horizontal ticks, user can set the drawing intervals or the number of ticks.
+By specifying the number of major ticks, the width of the horizontal axis will be divided to the specified number and major ticks are drawn by length longer than minor ticks. Then in each divided length, if there is enough space, the specified number of minor ticks will be displayed.
+It is possible that the user set major ticks by interval of iterations. In order to do that, select the major ticks by interval option, and set the interval. Therefore, after each specified number of iterations, one major tick will be drawn. 
+
+
+@page SystemHeatmapPlugin System Heatmap Plugin
+
+HEATMAP plugin is a \cube plugin that represents the value of the thread in each iteration, as colors. The User can apply different metrics and call paths on heatmap graph.
+
+
+@section heatmapbasics Basic Principles
+
+As a start point, it should be mentioned that HEATMAP works only on \cube file that has iterations. For those files which have not, user would face the warning on the terminal : \disp{ "No iterations for Heatmap"} and the plugin will not be shown.
+
+By loading the plugin, on \emph{system dimension}, the corresponding tab, \emph{ Heatmap}, will be added. Figure \figref{heatmap1} displays a view of it.
+
+@img{heatmap1.png,heatmap1,HEATMAP display window,width=0.8\textwidth}
+
+User can select different metrics such as \emph{Visits} and \emph{Time}, by clicking on them in \emph{metric dimension}. In addition, it is possible to get a HEATMAP for different \emph{call paths} of iterations, via clicking on them. However, for \emph{call paths} that are not located in iterations, like \emph{input_in} figure \figref{heatmap2}, no heatmap graph is displayed and user face the message \disp{"No data to display"} on a window.
+
+@img{heatmap2.png,heatmap2,No data to display,width=0.8\textwidth}
+
+Furthermore, the values on HEATMAP, can be evaluated in \emph{Inclusive} and \emph{Exclusive} manner. Therefore, user can easily collapse the tree on \emph{call path} and click on the desired path to get the exclusive value of it.
+
+Additionally, the exact calculated values can be seen by clicking left button of mouse on the desired position on the graph, a tooltip would display a value corresponding to the iteration.
+
+In a situation that user needs to store the graph, it is just needed to do right click on a graph, and select \disp{"Save as image"}, then the \emph{Save dialog} will be opened to specifying the path and name of the \textsc{PNG} file.
+
+@section heatmapmenu Menu Heatmap
+
+\emph{Plugin} menu offers the general function to enable or disable a plugin, and specific functions for each plugin.
+\emph{Heatmap plugin} provides the following functions in two areas, horizontal tick and vertical ticks(Figure \figref{heatmapmenupic}).
+
+@img{heatmap_menu.png,heatmapmenupic,'HEATMAP menu',width=0.4\textwidth}
+
+\textbf{Horizontal ticks:}  For adjusting the major horizontal ticks, user can set the drawing intervals or the number of ticks.
+By specifying the number of major ticks, the width of the horizontal axis will be divided to the specified number and major ticks are drawn by length longer than minor ticks. Then in each divided length, if there is enough space, the specified number of minor ticks will be displayed.
+
+Also, it is possible that the user set major ticks by interval of iterations. In order to do that, select the major ticks by interval option, and set the interval. Therefore, after each specified number of iterations, one major tick will be drawn. 
+
+\textbf{Vertical ticks:}  For adjusting the major vertical ticks, user can set the drawing intervals or the number of ticks.
+By specifying the number of major ticks, the length of the vertical axis will be divided to the specified number and major ticks are drawn by length longer than minor ticks. Then in each divided length, if there is enough space, the specified number of minor ticks will be displayed.
+
+Also, it is possible that the user set major ticks by interval of threads. In order to do that, select the major ticks by interval option, and set the interval. Therefore, after each specified number of threads, one major tick will be drawn. 
+
+
+@page SystemStatisticsPlugin System Statistics Plugin
+
+This plugin adds a statistics display tab next to the system-tree tab. It
+shows the value distribution either in a box plot or in a violin plot.
+
+@img{sys_statistics.png,SystemStatistics, Statistical data shown in a box plot on the left side and violin plot on the right side,width=.8\textwidth}
+
+The box plot shows a box-and-whisker distribution of
+metric severity values for the currently active subset of system
+resources (typically threads). The active subset is changed via the
+combobox menu at the bottom of the pane, and the \emph{y}-axis scale is
+adjusted via the display mode combobox at the top of the pane.
+
+The vertical whisker ranges from the smallest value (minimum) and to the
+largest value (maximum), while the bottom and top of the box mark the
+lower quartile (Q1) and upper quartile (Q3).  Within the box, the bold
+horizontal line represents the median (Q2) and the dashed line the mean
+value.
+
+The violin plot is an alternative method of plotting statistical data, which additionally shows the distribution of the data.
+It is a box plot with a rotated kernel density plot on each side. 
+The violin plot shows a thick black line for the median of the data, a dotted line for the mean, and red lines for quartiles.
+
+
+To see the statistics as numeric values in a separate window, use
+<left-mouse click> inside the chart.  Zooming into the boxplot is done
+with <left-mouse drag> from top to bottom, and reset with a
+<middle-mouse click> inside the chart.
+
+@page SystemSunburstPlugin System Sunburst Plugin
+
+@img{sunburst_full.png,sbfull,Expanded sunburst chart,width=.5\textwidth}
+
+This plugin adds a sunburst chart display tab to the system pane.  The sunburst
+chart uses a radial tree to visualize the system-tree in a more compact form
+than the system-tree.
+
+The sunburst chart and the system-tree are coupled, allowing the user to expand
+and collapse tree nodes in either widget with the changed state showing in the
+other widget.  The arcs of the sunburst chart can be expanded and collapsed by
+<left-mouse click> on the outer edge of the arc. The edge is highlighted as
+shown in Figure \figref{sbedge} when hovering over it with the mouse cursor.
+
+@img{sunburst_edge.png,sbedge,Arc edge highlighted when hovering over it,width=.5\textwidth}
+
+When expanded, the accumulated width of the child arcs is bounded by the width
+of their parent arc.  To adjust the width of an arc, the user can expand its
+area by using Ctrl+<left-mouse drag> while clicking close to the side edge of
+the respective arc, as shown in Figure \figref{sbwidth}. The width of
+sibling arcs is adjusted automatically.
+
+@img{sunburst_arcwidth.png,sbwidth,Adjusting the arc width using Ctrl+<left-mouse drag>,width=.5\textwidth}
+
+The standard interaction, next to expanding and collapsing arcs, is to rotate
+the sunburst chart, which is done via simple <left-mouse drag>.  The user can
+zoom into and out of parts of the sunburst chart using the mouse wheel.  The
+zoom behavior can be customized using the context menu. Furthermore, the user
+can move the visible canvas width Shift+<left-mouse drag>.
+
+The user experience can be customized through flags set in the context menu via
+<right-mouse click>.  Furthermore, the context menu allows to reset specific or
+all interactions (e.g., rotation, arc width) with the chart to their default
+value.
+
+The following table lists all available mouse interactions:
+<table>
+    <tr><td><left-mouse click></td><td> \emph{On arc:}Select arc <br/>
+                                        \emph{On arc edge:}Expand/collapse arc </td></tr>
+    <tr><td> <right-mouse click> </td><td> Context menu </td></tr>
+    <tr><td> <left-mouse drag> </td><td> Rotate chart </td></tr>
+    <tr><td> Ctrl+<left-mouse drag> </td><td> Change arc width </td></tr>
+    <tr><td> Shift+<left-mouse drag> </td><td> Move chart on canvas </td></tr>
+    <tr><td> < scroll mouse-wheel > </td><td> Zoom in/out </td></tr>
+</table>
+
+\latexonly \newpage \endlatexonly
+
+The following table lists all setting available via context menu:
+<table>
+    <tr><td>Frame coloring</td><td>Adjust the frame color of arcs</td></tr>
+    <tr><td>Selection coloring</td><td>Adjust the frame color of selected arcs</td></tr>
+    <tr><td>Mark 0 degrees</td><td>Draw a line where the widget start the fan of arcs</td></tr>
+    <tr><td>Hide info tooltip</td><td>Do not show arc info in top left corner when hovering over a arc</td></tr>
+    <tr><td>Hide frame of small arcs</td><td>Avoid visual clutter by not drawing frames around thin arcs</td></tr>hal
+    <tr><td>Zoom towards the cursor</td><td>Instead of zooming into the chart origin, zoom towards the cursor</td></tr>
+    <tr><td>Invert zoom</td><td>Invert zoom direction when using the mouse wheel of track pad</td></tr>
+    <tr><td>Reset</td><td>Reset selected or all interactions (e.g., arc width, rotation,...) to default state</td></tr>
+</table>
+
+
+@page Advisor Cube Advisor Plugin
+Advisor is a standard plugin and is available as long as the measurement contains a <em>Time</em> metric.
+The main goal of the Advisor plugin is to provide a user a fast access to the various performance evaluations of the
+performance of their HPC application. 
+
+@section StartAdvisor Getting Started with Advisor
+If measurement contains metric <em>Time</em>, CubeGUI will enable the Advisor plugin in the "General" tab in the
+plugins section. 
+
+Some @ref AdvisorAssessments can be disabled due to missing performance properties, e.g. missing PAPI counters. In such cases one potential solution is to merge original measurement with measurement which includes missing properties and run analysis again. Measurement merging can be done with one of the context-free plugins @ref mergeplugin or @ref meanplugin.
+
+Moreover, some assessments are hidden (e.g. @ref POPMetrics_hybrid and @ref POPMetrics_hybrid_JSC) and can be available in "expert" mode (see @ref cloptions).
+
+@section AdvisorAssessments Supported Assessments
+Advisor supports various performance assessments, such as 
+ - @ref POPMetrics
+ - @ref POPMetrics_hybrid
+ - @ref POPMetrics_hybrid_additive
+ - @ref POPMetrics_hybrid_BSC
+ - @ref POPMetrics_hybrid_JSC
+ - @ref AdvisorKNLVectorAnalysis 
+ - @ref AdvisorKNLMemoryAnalysis.
+
+@subsection POPMetrics POP Assessment
+
+Attempting to optimize the performance of a parallel code can be a daunting task, and often it is difficult to know where to start. For example, we might ask if the way computational work is divided is a problem? Or perhaps the chosen communication scheme is inefficient? Or does something else impact performance? To help address this issue, POP has defined a methodology for analysis of parallel codes to provide a quantitative way of measuring relative impact of the different factors inherent in parallelization. This article introduces these metrics, explains their meaning, and provides insight into the thinking behind them.
+
+A feature of the methodology is, that it uses a hierarchy of @ref POPMetrics, each metric reflecting a common cause of inefficiency in parallel programs. These metrics then allow a comparison of the parallel performance (e.g. over a range of thread/process counts, across different machines, or at different stages of optimization and tuning) to identify which characteristics of the code contribute to the inefficiency.
+
+The first step to calculating these metrics is to use a suitable tool (e.g. Score-P or Extrae) to generate trace data whilst the code is executed. The traces contain information about the state of the code at a particular time, e.g. it is in a communication routine or doing useful computation, and also contains values from processor hardware counters, e.g. number of instructions executed, number of cycles.
+
+The @ref POPMetrics are then calculated as efficiencies between 0 and 1, with higher numbers being better. In general, we regard efficiencies above 0.8 as acceptable, whereas lower values indicate performance issues that need to be explored in detail. The ultimate goal then for POP is rectifying these underlying issues by the user. Please note, that @ref POPMetrics can be computed only for <b>inclusive</b> callpaths, as they are less meaningful for exclusive callpaths. Furthermore, @ref POPMetrics are not available in "Flat view" mode.
+
+The approach outlined here is applicable to various parallelism paradigms, however for simplicity the @ref POPMetrics presented here are formulated in terms of a distributed-memory message-passing environment, e.g., MPI. For this the following values are calculated for each process from the trace data: time doing useful computation, time in communication, number of instructions & cycles during useful computation. Useful computation excludes time within the overhead of parallel paradigms (@ref computation_time).
+
+At the top of the hierarchy is <b>Global Efficiency (GE)</b>, which we use to judge overall quality of parallelization. Typically, inefficiencies in parallel code have two main sources:
+<ul>
+   <li>Overhead imposed by the parallel nature of a code</li>
+   <li>Poor scaling of computation with increasing numbers of processes</li>
+</ul>
+and to reflect this we define two sub-metrics to measure these two inefficiencies. These are the <b>Parallel Efficiency</b> and the <b>Computation Efficiency</b>, and our top-level GE metric is the product of these two sub-metrics:
+
+<CENTER>
+GE = @ref parallel_efficiency &sdot; @ref computation_efficiency
+</CENTER>
+
+@note
+	<b>Computation Efficiency</b> can be computed only at scale with multiple measurements and currently is not supported by Advisor.
+
+We sincerely hope this methodology will be adopted by our users and others and will form part of the project's legacy. If you would like to know more about the POP metrics and the tools used to generate them please check out the rest of the <a href="https://pop-coe.eu/further-information/learning-material">Learning Material</a> on our website, especially the document on <a href="https://sharepoint.ecampus.rwth-aachen.de/units/rz/HPC/public/Shared%20Documents/Metrics.pdf">POP Metrics</a>
+
+@subsection POPMetrics_hybrid NAG POP Hybrid Assessment (Multiplicative)
+
+@note
+	@ref POPMetrics_hybrid is available only in "expert" mode (see @ref cloptions).
+
+This is one approach to extend POP metrics for hybrid (MPI+OpenMP) applications. In this approach @ref parallel_efficiency_hyb split into two components:
+- @ref process_efficiency_hyb shows the inefficiencies on MPI level, and can be broken down into @ref lb_efficiency_hyb and @ref comm_efficiency_hyb
+- @ref thread_efficiency_hyb shows the inefficiencies on OpenMP level, and can be broken down into @ref amdahl_efficiency_hyb and @ref openmp_region_efficiency_hyb
+
+In this analysis <b>Parallel Efficiency (PE)</b> can be computed as a product of these two sub-metrics:
+<CENTER>
+PE = @ref process_efficiency_hyb &sdot; @ref thread_efficiency_hyb
+</CENTER>
+
+@subsection POPMetrics_hybrid_additive NAG POP Hybrid Assessment (Additive)
+
+This is one approach to extend POP metrics for hybrid (MPI+OpenMP) applications. In this approach @ref parallel_efficiency_hyb_add split into two components:
+- @ref process_efficiency_hyb_add shows the inefficiencies on MPI level, and can be broken down into @ref lb_efficiency_hyb_add and @ref comm_efficiency_hyb_add.
+- @ref thread_efficiency_hyb_add shows the inefficiencies on OpenMP level, and can be broken down into @ref amdahl_efficiency_hyb_add and @ref openmp_region_efficiency_hyb_add
+
+In this analysis <b>Parallel Efficiency (PE)</b> an be computed directly or as a sum of these two sub-metrics minus one:
+<CENTER>
+PE = @ref process_efficiency_hyb_add  +  @ref thread_efficiency_hyb_add - 1
+</CENTER>
+
+This scheme has two advantages: each hybrid efficiency measures absolute cost of the issue(s) under consideration, i.e. relative to the runtime; additive method gives more freedom in defining child metrics.
+
+@subsection POPMetrics_hybrid_BSC BSC POP Hybrid Assessment (BSC)
+
+This is one approach to extend POP metrics for hybrid (MPI+OpenMP) applications. It provides three types of efficiencies, i.e.:
+- @ref hybrid_parallel_efficiency_bsc reveals the inefficiency in processes and threads utilization and can be broken down into @ref hybrid_lb_efficiency_bsc and @ref hybrid_comm_efficiency_bsc
+- @ref mpi_parallel_efficiency_bsc reveals the inefficiency in MPI processes and can be broken down into @ref mpi_lb_efficiency_bsc and @ref mpi_comm_efficiency_bsc
+- @ref omp_parallel_efficiency_bsc reveals the inefficiency in OpenMP threads and can be broken down into @ref omp_lb_efficiency_bsc and @ref omp_comm_efficiency_bsc
+
+@subsection POPMetrics_hybrid_JSC JSC Hybrid Assessment
+
+@note
+	@ref POPMetrics_hybrid_JSC is available only in "expert" mode (see @ref cloptions).
+
+This is JSC spin-off of POP metrics for hybrid (MPI+OpenMP) applications. In this approach there are two sets of metrics, i.e.:
+- metrics describing inefficiencies in MPI: @ref lb_efficiency_jsc and @ref comm_efficiency_jsc
+- metrics describing inefficiencies in OpenMP: @ref amdahl_jsc and  @ref omp_lb_jsc and @ref omp_ser_jsc
+
+There are two peculiarities for this model
+<ul>
+   <li>this model considers only MPI and OpenMP and doesn't evaluate parallel behaviour in general</li>
+   <li>additionally to a single metric user can explore statistics over metrics (for some metrics), i.e. MIN/AVG/MAX values, which can help to identity execution anomalies</li>
+</ul>
+
+@subsection AdvisorKNLVectorAnalysis KNL Vectorization analysis
+We investigate loops with regard to their degree
+of vectorization and offer suggestions for optimization candidates. This required
+hardware counter measurements, obtained in multiple runs, due to the limited num
+ber of available counter registers. In the context of counter measurements this is not
+unusual for the Score-P work-flow. The suggestion of specific optimization candidates on the other hand is a deviation from the standard Score-P metric semantics.
+
+The Score-P metric concept operates on the actual value of a metric (in absolute or
+relative terms) and analysis sometimes requires implicit information, e.g. if a higher
+value is worse than a small value. This approach leaves the decision about the rel-
+evance of a metric value of a certain call-path to the user. They need to judge the
+severity of an issue based on the knowledge of the hardware architecture, the source
+code, the input data, the use case, or even external parameters. Providing a generic
+set of thresholds, deciding if a metric value is problematic, is a hard problem in
+general, as too many parameters are involved, some outside the scope of the perfor-
+mance analysis tool. 
+
+In the case of vectorization assistance we used the cooperation
+with Intel R to investigate the use of explicit knowledge about the architecture for
+providing such thresholds in that limited context. In the following we describe the
+metrics we focused on and the challenges they pose for the Score-P work-flow and
+analysis.
+
+@subsection AdvisorKNLMemoryAnalysis KNL Memory usage analysis
+With Score-P, we measure the bandwidth values per code-region outside of
+OpenMP parallel regions, due the given uncore counter restrictions. Depending
+on the application, there might be a lot of code regions that show a high band-
+width value. To find the most bandwidth sensitive candidates among these regions,
+we need to sort them by their last-level cache-misses (LLC). This gives us the
+MCDRAM candidate metric per code region, as shown in Figure 4. We derive the
+MCDRAM candidate metric, i.e., we sort the high bandwith callpaths by their last-
+level cache misses, in the Cube plugin KNL advisor (see also 5.2). As input we use
+the PAPI-measured access counts for each DDR4 memory channel and the PAPI-SCIPHI Score-P and Cube extensions for Intel Phi 
+measured LLC counts. We take care of measuring the memory accesses only per-
+process while running exclusively on a single KNL node.
+As Score-P and Cube purely work on code regions, the MCDRAM candidates
+are also code regions. As a drawback, if a candidate code region accesses several
+data structures, we cannot point to the most bandwidth sensitive structure. Vtune [1],
+HPCToolkit [3][12] or ScaAnalyzer [13] might provide more detailed insight.
+In addition to this drawback, the above approach is not generally applicable for
+tools as accessing counters from the uncore requires priviledged access to a ma-
+chine, either by setting the paranoia flag or by providing a special kernel module.
+On production machines, this access is, for security reasons, often not granted. This
+does not only apply to memory accesses, but to all uncore counters.
+
+@page AdvisorPOPHybridTestsParallel_efficiency
+
+@section  parallel_efficiency_hyb Parallel Efficiency
+<b>Parallel Efficiency (PE)</b> reveals the inefficiency in processes and threads utilization. These are measured with <b>Process Efficiency</b> and <b>Thread Efficiency</b>, and PE can be computed directly or as a product of these two sub-metrics:
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{PE=\frac{avg(comp)}{max(runtime)} \f}
+  <tr><td> = @ref process_efficiency_hyb &sdot; @ref thread_efficiency_hyb
+</table>
+
+@page AdvisorPOPHybridTestsMissing_parallel_efficiency
+@section  missing_parallel_efficiency_hyb Missing Parallel Efficiency?
+@ref parallel_efficiency_hyb metric is a basic POP metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another tool than Score-P/Scalasca, it might have missing metric <b>Time</b>. In this case POP analysis is not possible.
+
+@page AdvisorPOPHybridTestsProcess_efficiency
+@section  process_efficiency_hyb Process Efficiency
+
+<b>Process Efficiency </b> completely ignores thread behavior, and evaluates process utilization via two components:
+<ul>
+   <li>Workload across processes</li>
+   <li>Communication across processes</li>
+</ul>
+
+These two can be measured with <b>Computation Load Balance</b> and <b>Communication Efficiency</b> respectively. <b>Process Efficiency</b> can be computed directly or as a product of these two sub-metrics:
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{PE=\frac{avg(time\; in\; OpenMP) + avg(serial\; computation) }{max(runtime)} \f}
+  <tr><td> = @ref lb_efficiency_hyb &sdot; @ref comm_efficiency_hyb.
+</table>
+
+Where average time in OpenMP and average serial computation are computed as <b>weighted arithmetic mean</b>. If number of threads is equal across processes average time in OpenMP and average serial computation can be computed as <b>ordinary arithmetic mean</b>.
+
+@page AdvisorPOPHybridTestsMissing_process_efficiency
+@section  missing_process_efficiency_hyb Missing Process Efficiency?
+@ref process_efficiency_hyb metric is a basic POP metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another tool than Score-P/Scalasca, it might have missing metric <b>Time</b>. In this case POP analysis is not possible.
+
+@page AdvisorPOPHybridTestsLoad_balance
+@section  lb_efficiency_hyb Computation Load Balance
+<b>Computation Load Balance</b> can be evaluated directly by following formula:
+<table align="center">
+  <tr><td>\f{eqnarray*}{Computation\; Load\; Balance=\frac{avg(time\; in\; OpenMP) + avg(serial\; computation) }{max(time\; in\; OpenMP + serial\; computation\; time)} \f}
+</table>
+
+Where average time in OpenMP and average serial computation are computed as <b>weighted arithmetic mean</b>. If number of threads is equal across processes average time in OpenMP and average serial computation can be computed as <b>ordinary arithmetic mean</b>.
+
+@page AdvisorPOPHybridTestsMissing_load_balance
+@section  missing_lb_efficiency_hyb Missing Computation Load Balance?
+@ref lb_efficiency_hyb metric is a basic POP metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another tool than Score-P/Scalasca, it might have missing metric <b>Time</b>. In this case POP analysis is not possible.
+
+@page AdvisorPOPHybridTestsCommunication_efficiency
+@section comm_efficiency_hyb MPI Communication Efficiency
+<b>MPI Communication Efficiency (CommE)</b> can be evaluated directly by following formula:
+<table align="center">
+  <tr><td>\f{eqnarray*}{CommE=\frac{max(time\; in\; OpenMP + serial\; computation\; time) }{max(runtime)} \f}
+</table>
+
+CommE identifies when code is inefficient because it spends a large amount of time communicating rather than performing useful computations. CommE is composed of two additional metrics that reflect two causes of excessive time within communication:
+<ul>
+<li>Processes waiting at communication points for other processes to arrive (i.e. serialisation)</li>
+<li>Processes transferring large amounts of data relative to the network capacity</li>
+</ul>
+
+These are measured using @ref serialisation_efficiency_hyb and @ref transfer_efficiency_hyb. Combination of these two sub-metrics gives us <b>Communication Efficiency</b>:
+<CENTER>
+CommE = @ref serialisation_efficiency_hyb &sdot; @ref transfer_efficiency_hyb
+</CENTER>
+
+To obtain these two sub-metrics we need to perform Scalasca trace analysis which identifies serialisations and inefficient communication patterns.
+
+@page AdvisorPOPHybridTestsMissing_communication_efficiency
+@section  missing_communication_efficiency_hyb Missing Communication Efficiency?
+@ref comm_efficiency_hyb metric is a basic POP metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another tool than Score-P/Scalasca, it might have missing metric <b>Time</b>. In this case POP analysis is not possible.
+
+@page AdvisorPOPHybridTestsSerialisation_efficiency
+@section  serialisation_efficiency_hyb Serialisation Efficiency
+<b>Serialisation Efficiency (SerE)</b> measures inefficiency due to idle time within communications, i.e. time where no data is transferred, and is expressed as:
+<table align="center">
+  <tr><td>\f{eqnarray*}{SerE=maximum\; across\; processes( \frac{computation\; time}{total\; runtime\; on\; ideal\; network}) \f}
+</table>
+
+where <b>total run-time on ideal network</b> is a runtime without detected by Scalasca waiting time and MPI I/O time.
+
+@page AdvisorPOPHybridTestsMissing_serialisation_efficiency
+@section  missing_serialisation_efficiency_hyb Missing Serialisation Efficiency?
+@ref serialisation_efficiency_hyb metric is available only, if MPI wait states have been detected and measured.
+Hence it is only available for trace analysis results of Scalasca such as <b>scout.cubex</b> or <b>trace.cubex</b>
+
+@page AdvisorPOPHybridTestsTransfer_efficiency
+@section  transfer_efficiency_hyb Transfer Efficiency
+<b>Transfer Efficiency (TE)</b> measures inefficiencies due to time spent in data transfers:
+<table align="center">
+  <tr><td>\f{eqnarray*}{TE=maximum\; across\; processes( \frac{total\; runtime\; on\; ideal\; network}{maximum\; across\; processes ( total\; measured\; runtime )} ) \f}
+</table>
+
+where <b>total run-time on ideal network</b> is a runtime without detected by Scalasca waiting time and MPI I/O time.
+
+@page AdvisorPOPHybridTestsMissing_transfer_efficiency
+@section  missing_transfer_efficiency_hyb Missing Transfer Efficiency?
+@ref transfer_efficiency_hyb metric is available only, if MPI wait states have been detected and measured.
+Hence it is only available for trace analysis results of Scalasca such as <b>scout.cubex</b> or <b>trace.cubex</b>
+
+@page AdvisorPOPHybridTestsThread_efficiency
+@section  thread_efficiency_hyb Thread Efficiency
+<b>Thread Efficiency </b> considers two sources of inefficiency:
+<ul>
+   <li>Serial computation on the master outside OpenMP, i.e. reflects Amdahl's law</li>
+   <li>Inefficiencies within threads, e.g. serialisation across threads</li>
+</ul>
+
+These two can be measured with <b>Amdahl's Efficeincy</b> and <b>OpenMP region Efficiency</b> respectively. <b>Thread Efficeincy</b> can be computed directly or as a product of these two sub-metrics:
+<table align="center">
+  <tr><td>\f{eqnarray*}{Thread\; Efficiency=\frac{avg( computation\; time) }{avg( time\; in\; OpenMP ) + avg( serial\; computation )} \f}
+  <tr><td> = @ref amdahl_efficiency_hyb &sdot; @ref openmp_region_efficiency_hyb
+</table>
+
+Where average time in OpenMP and average serial computation are computed as <b>weighted arithmetic mean</b>. If number of threads is equal across processes average time in OpenMP and average serial computation can be computed as <b>ordinary arithmetic mean</b>.
+
+@page AdvisorPOPHybridTestsMissing_thread_efficiency
+@section  missing_thread_efficiency_hyb Missing Thread Efficiency?
+@ref thread_efficiency_hyb metric is a basic POP metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another tool than Score-P/Scalasca, it might have missing metric <b>Time</b>. In this case POP analysis is not possible.
+
+@page AdvisorPOPHybridTestsAmdahl_efficiency
+@section amdahl_efficiency_hyb Amdahl's Efficiency
+<b>Amdahl's Efficiency</b> indicates serial computation and can be computed as follows:
+<table align="center">
+  <tr><td>\f{eqnarray*}{Amdahl's\; Efficiency=\frac{avg( computation\; time) }{avg( time\; in\; useful\; computation\; within\; OpenMP ) + avg( serial\; computation )} \f}
+</table>
+
+Where average serial computation computed as <b>weighted arithmetic mean</b>. If number of threads is equal across processes average serial computation can be computed as <b>ordinary arithmetic mean</b>.
+
+@page AdvisorPOPHybridTestsMissing_thread_efficiency
+@section  missing_amdahl_efficiency_hyb Missing Amdahl's Efficiency?
+@ref amdahl_efficiency_hyb metric is a basic POP metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another tool than Score-P/Scalasca, it might have missing metric <b>Time</b>. In this case POP analysis is not possible.
+
+@page AdvisorPOPHybridTestsOmpRegion_efficiency
+@section openmp_region_efficiency_hyb OpenMP Region Efficiency
+<b>OpenMP Region Efficiency</b> indicates inefficiencies within threads, and can be computed as follows:
+<table align="center">
+  <tr><td>\f{eqnarray*}{OpenMP\; Region\; Efficiency=\frac{avg(time\; in\; useful\; computation\; within\; OpenMP ) + avg( serial\; computation ) }{avg( time\; in\; OpenMP ) + avg( serial\; computation )} \f}
+</table>
+
+Where average time in OpenMP and average serial computation are computed as <b>weighted arithmetic mean</b>. If number of threads is equal across processes average time in OpenMP and average serial computation can be computed as <b>ordinary arithmetic mean</b>.
+
+@page AdvisorPOPHybridTestsMissing_omp_region_efficiency
+@section  missing_openmp_region_efficiency_hyb Missing OpenMP Region Efficiency?
+@ref openmp_region_efficiency_hyb metric is a basic POP metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another tool than Score-P/Scalasca, it might have missing metric <b>Time</b>. In this case POP analysis is not possible.
+
+@page AdvisorPOPHybridTestsIpc
+@section  ipc_hyb IPC (only computation)
+<b>IPC</b> indicates number of instructions executed by CPU per clock cycle. The higher the value the better the CPU performance. It is computed as a ration of <b>PAPI_TOT_INS</b> and <b>PAPI_TOT_CYC</b> for useful (user) work.
+
+@page AdvisorPOPHybridTestsMissing_ipc
+@section  missing_ipc_hyb Missing IPC?
+@ref ipc_hyb  metric is available only, if one has collected <b>PAPI_TOT_INS</b> and <b>PAPI_TOT_CYC</b> counters while measurement. How to do it see <a href="http://scorepci.pages.jsc.fz-juelich.de/scorep-pipelines/docs/scorep-4.1/html/measurement.html#perf_counters"> Score-P manual</a>
+
+@page AdvisorPOPHybridTestsStalled_resources
+@section  stalled_resources_hyb Resource stall cycles (only computation)
+<b>Resource stall cycles</b> indicates number of computational cycles, where processor has been waiting for some resources to the total number of cycles. It is calculated as the ratio of <b>PAPI_RES_STL</b> and <b>PAPI_TOT_CYC</b> for useful (user) work.
+
+@page AdvisorPOPHybridTestsMissing_stalled_resources
+@section  missing_stalled_resources_hyb Missing "Resource stall cycles"?
+@ref stalled_resources_hyb metric is available only, if one has collected <b>PAPI_STL_RES</b> and <b>PAPI_TOT_CYC</b> counters while measurement. How to do it see <a href="http://scorepci.pages.jsc.fz-juelich.de/scorep-pipelines/docs/scorep-4.1/html/measurement.html#perf_counters"> Score-P manual</a>
+
+@page AdvisorPOPHybridTestsNoWaitINS_efficiency
+@section  nowait_instructions_hyb Instructions (only computation)
+<b>Instructions (only computation)</b> indicates the number of CPU instructions executed in the computation code, which contributes to the <b>@ref computation_time_hyb</b>.
+
+@page AdvisorPOPHybridTestsMissingNoWaitINS_efficiency
+@section  missing_no_wait_instructions_hyb Missing Instructions (only computation)?
+@ref nowait_instructions_hyb metric is  available only, if one has collected <b>PAPI_TOT_INS</b> counters while measurement. How to do it see <a href="http://scorepci.pages.jsc.fz-juelich.de/scorep-pipelines/docs/scorep-4.1/html/measurement.html#perf_counters"> Score-P manual</a>
+
+@page AdvisorPOPHybridTestsComputationTime
+@section  computation_time_hyb Computation time
+<b>Computation time</b> indicated total time spend in the computation call path <b>without</b> MPI, OpenMP, POSIX threads, std::threads, CUDA, OpenCL, OpenACC, SHMEM. With another words, it is the user code.
+
+@page AdvisorPOPHybridTestsMissingComputationTime
+@section  missing_computation_time_hyb Missing Computation time?
+@ref computation_time_hyb metric is a basic Cube metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another than Score-P/Scalasca, it might have missing metric <b>Time</b>.
+
+@page AdvisorPOPHybridAddTestsParallel_efficiency
+@section  parallel_efficiency_hyb_add Parallel Efficiency
+<b>Parallel Efficiency (PE)</b> reveals the inefficiency in processes and threads utilization. These are measured with <b>Process Efficiency</b> and <b>Thread Efficiency</b>, and PE can be computed directly or as a sum of these two sub-metrics minus one:
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{PE=\frac{avg(computation\; time)}{max(runtime)} \f}
+  <tr><td> = @ref process_efficiency_hyb_add  +  @ref thread_efficiency_hyb_add - 1
+</table>
+
+@page AdvisorPOPHybridAddTestsMissing_parallel_efficiency
+@section  missing_parallel_efficiency_hyb_add Missing Parallel Efficiency?
+@ref parallel_efficiency_hyb_add metric is a basic POP metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another tool than Score-P/Scalasca, it might have missing metric <b>Time</b>. In this case POP analysis is not possible.
+
+@page AdvisorPOPHybridAddTestsProcess_efficiency
+@section  process_efficiency_hyb_add Process Efficiency
+<b>Process Efficiency </b> completely ignores thread behavior, and evaluates process utilization via two components:
+<ul>
+   <li>Workload across processes</li>
+   <li>Communication across processes</li>
+</ul>
+
+These two can be measured with <b>Computation Load Balance</b> and <b>Communication Efficiency</b> respectively. <b>Process Efficiency</b> can be computed directly or as a sum of these two sub-metrics minus one:
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{Process\; Efficiency=\frac{avg(time\; in\; OpenMP) + avg(serial\; computation)}{max(runtime)} \f}
+  <tr><td> = @ref lb_efficiency_hyb_add  +  @ref comm_efficiency_hyb_add - 1
+</table>
+
+Where average time in OpenMP and average serial computation are computed as <b>weighted arithmetic mean</b>. If number of threads is equal across processes average time in OpenMP and average serial computation can be computed as <b>ordinary arithmetic mean</b>.
+
+@page AdvisorPOPHybridAddTestsMissing_process_efficiency
+@section  missing_process_efficiency_hyb_add Missing Process Efficiency?
+@ref process_efficiency_hyb_add metric is a basic POP metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another tool than Score-P/Scalasca, it might have missing metric <b>Time</b>. In this case POP analysis is not possible.
+
+@page AdvisorPOPHybridAddTestsCommunication_efficiency
+@section comm_efficiency_hyb_add MPI Communication Efficiency
+<b>MPI Communication Efficiency (CommE)</b> can be evaluated directly by following formula:
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{CommE=\frac{max(time\; in\; OpenMP + serial\; computation\; time)}{max(runtime)} \f}
+</table>
+
+CommE identifies when code is inefficient because it spends a large amount of time communicating rather than performing useful computations. CommE is composed of two additional metrics that reflect two causes of excessive time within communication:
+<ul>
+<li>Processes waiting at communication points for other processes to arrive (i.e. serialisation)</li>
+<li>Processes transferring large amounts of data relative to the network capacity</li>
+</ul>
+
+These are measured using @ref serialisation_efficiency_hyb_add and @ref transfer_efficiency_hyb_add. Combination of these two sub-metrics gives us <b>Communication Efficiency</b>:
+<CENTER>
+CommE = @ref serialisation_efficiency_hyb_add &sdot; @ref transfer_efficiency_hyb_add
+</CENTER>
+
+To obtain these two sub-metrics we need to perform Scalasca trace analysis which identifies serialisations and inefficient communication patterns.
+
+@page AdvisorPOPHybridAddTestsMissing_communication_efficiency
+@section  missing_communication_efficiency_hyb_add Missing Communication Efficiency?
+@ref comm_efficiency_hyb_add metric is a basic POP metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another tool than Score-P/Scalasca, it might have missing metric <b>Time</b>. In this case POP analysis is not possible.
+
+@page AdvisorPOPHybridAddTestsSerialisation_efficiency
+@section  serialisation_efficiency_hyb_add Serialisation Efficiency
+<b>Serialisation Efficiency (SerE)</b> measures inefficiency due to idle time within communications, i.e. time where no data is transferred, and is expressed as:
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{SerE=maximum\; across\; processes(\frac{computation\; time}{total\; runtime\; on\; ideal\; network}) \f}
+</table>
+
+where <b>total run-time on ideal network</b> is a runtime without detected by Scalasca waiting time and MPI I/O time.
+
+@page AdvisorPOPHybridAddTestsMissing_serialisation_efficiency
+@section  missing_serialisation_efficiency_hyb_add Missing Serialisation Efficiency?
+@ref serialisation_efficiency_hyb_add metric is available only, if MPI wait states have been detected and measured.
+Hence it is only available for trace analysis results of Scalasca such as <b>scout.cubex</b> or <b>trace.cubex</b>
+
+@page AdvisorPOPHybridAddTestsTransfer_efficiency
+@section  transfer_efficiency_hyb_add Transfer Efficiency
+<b>Transfer Efficiency (TE)</b> measures inefficiencies due to time spent in data transfers:
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{TE=\frac{maximum\; across\; processes(total\; runtime\; on\; ideal\; network)}{maximum\; across\; processes(total\; measured\; time\;)} \f}
+</table>
+
+where <b>total run-time on ideal network</b> is a runtime without detected by Scalasca waiting time and MPI I/O time.
+
+@page AdvisorPOPHybridAddTestsMissing_transfer_efficiency
+@section  missing_transfer_efficiency_hyb_add Missing Transfer Efficiency?
+@ref transfer_efficiency_hyb_add metric is available only, if MPI wait states have been detected and measured.
+Hence it is only available for trace analysis results of Scalasca such as <b>scout.cubex</b> or <b>trace.cubex</b>
+
+@page AdvisorPOPHybridAddTestsLoad_balance
+@section  lb_efficiency_hyb_add Computation Load Balance
+<b>Computation Load Balance</b> can be evaluated directly by following formula:
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{Computation\; Load\; Balance=\frac{max(runtime) - max(time\; in\; OpenMP + serial\; computation\; time)  +  avg(time\; in\; OpenMP) + avg(time\; in\; serial\; computation)}{max(runtime)} \f}
+</table>
+
+Where average time in OpenMP and average serial computation are computed as <b>weighted arithmetic mean</b>. If number of threads is equal across processes average time in OpenMP and average serial computation can be computed as <b>ordinary arithmetic mean</b>.
+
+@page AdvisorPOPHybridAddTestsMissing_load_balance
+@section  missing_lb_efficiency_hyb_add Missing Computation Load Balance?
+@ref lb_efficiency_hyb_add metric is a basic POP metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another tool than Score-P/Scalasca, it might have missing metric <b>Time</b>. In this case POP analysis is not possible.
+
+@page AdvisorPOPHybridAddTestsThread_efficiency
+@section  thread_efficiency_hyb_add Thread Efficiency
+<b>Thread Efficiency </b> considers two sources of inefficiency:
+<ul>
+   <li>Serial computation on the master outside OpenMP, i.e. reflects Amdahl's law</li>
+   <li>Inefficiencies within threads, e.g. serialisation across threads</li>
+</ul>
+
+These two can be measured with <b>Amdahl's Efficeincy</b> and <b>OpenMP region Efficiency</b> respectively. <b>Thread Efficeincy</b> can be computed directly or as a sum of these two sub-metrics minus one:
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{Thread\; Efficiency=\frac{max(runtime) - avg(time\; in\; OpenMP) + avg(time\; in\; useful\; computation\; within\; OpenMP) - avg(idling\; time\; of\; OpenMP\; threads)}{max(runtime)} \f}
+  <tr><td> = @ref amdahl_efficiency_hyb_add + @ref openmp_region_efficiency_hyb_add - 1
+</table>
+
+Where <b>average idling time of OpenMP threads</b> considers that threads are idling if only master thread is working and can be computed by following formula
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{average\; idling\; time\; of\; OpenMP\; threads=\sum_{process=0}^{num\; of\; processes} \frac{serial\; computation \cdot (number\; of\; threads\; per\; process - 1)}{number\; of\; all\; available\; threads} \f}
+</table>
+
+Moreover, average time in OpenMP computed as <b>weighted arithmetic mean</b>. If number of threads is equal across processes average time in OpenMP can be computed as <b>ordinary arithmetic mean</b>.
+
+@page AdvisorPOPHybridAddTestsMissing_thread_efficiency
+@section  missing_thread_efficiency_hyb_add Missing Thread Efficiency?
+@ref thread_efficiency_hyb_add metric is a basic POP metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another tool than Score-P/Scalasca, it might have missing metric <b>Time</b>. In this case POP analysis is not possible.
+
+@page AdvisorPOPHybridAddTestsAmdahl_efficiency
+@section amdahl_efficiency_hyb_add Amdahl's Efficiency
+<b>Amdahl's Efficiency</b> indicates serial computation and can be computed as follows:
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{Amdahl's\; Efficiency=\frac{max(runtime) - avg(idling\; time\; of\; OpenMP\; threads)}{max(runtime)} \f}
+</table>
+
+where <b>average idling time of OpenMP threads</b> considers that threads are idling if only master thread is working and can be computed by following formula
+<table align="center">
+  <tr><td>\f{eqnarray*}{average\; idling\; time\; of\; OpenMP\; threads=\sum_{process=0}^{num\; of\; processes} \frac{serial\; computation \cdot (number\; of\; threads\; per\; process - 1)}{number\; of\; all\; available\; threads} \f}
+</table>
+
+@page AdvisorPOPHybridAddTestsMissing_thread_efficiency
+@section  missing_amdahl_efficiency_hyb_add Missing Amdahl's Efficiency?
+@ref amdahl_efficiency_hyb_add metric is a basic POP metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another tool than Score-P/Scalasca, it might have missing metric <b>Time</b>. In this case POP analysis is not possible.
+
+@page AdvisorPOPHybridAddTestsOmpRegion_efficiency
+@section openmp_region_efficiency_hyb_add OpenMP Region Efficiency
+<b>OpenMP Region Efficiency</b> indicates inefficiencies within threads, and can be computed as follows:
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{OpenMP\; Region\; Efficiency=\frac{max(runtime) - avg(time\; in\; OpenMP) + avg(time\; in\; useful\; computation\; within\; OpenMP)}{max(runtime)} \f}
+</table>
+
+Where average time in OpenMP is computed as <b>weighted arithmetic mean</b>. If number of threads is equal across processes average time in OpenMP can be computed as <b>ordinary arithmetic mean</b>.
+
+@page AdvisorPOPHybridAddTestsMissing_omp_region_efficiency
+@section  missing_openmp_region_efficiency_hyb_add Missing OpenMP Region Efficiency?
+@ref openmp_region_efficiency_hyb_add metric is a basic POP metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another tool than Score-P/Scalasca, it might have missing metric <b>Time</b>. In this case POP analysis is not possible.
+
+@page AdvisorPOPHybridAddTestsIpc
+@section  ipc_hyb_add IPC (only computation)
+<b>IPC</b> indicates number of instructions executed by CPU per clock cycle. The higher the value the better the CPU performance. It is computed as a ration of <b>PAPI_TOT_INS</b> and <b>PAPI_TOT_CYC</b> for useful (user) work.
+
+@page AdvisorPOPHybridAddTestsMissing_ipc
+@section  missing_ipc_hyb_add Missing IPC?
+@ref ipc_hyb_add  metric is available only, if one has collected <b>PAPI_TOT_INS</b> and <b>PAPI_TOT_CYC</b> counters while measurement. How to do it see <a href="http://scorepci.pages.jsc.fz-juelich.de/scorep-pipelines/docs/scorep-4.1/html/measurement.html#perf_counters"> Score-P manual</a>
+
+@page AdvisorPOPHybridAddTestsStalled_resources
+@section  stalled_resources_hyb_add Stalled resources (only computation)
+<b>Stalled resources</b> indicates number of computational cycles, where processor has been waiting for some resources to the total number of cycles. It is calculated as the ratio of <b>PAPI_RES_STL</b> and <b>PAPI_TOT_CYC</b> for useful (user) work.
+
+@page AdvisorPOPHybridAddTestsMissing_stalled_resources
+@section  missing_stalled_resources_hyb_add Missing Stalled resources?
+@ref stalled_resources_hyb_add metric is available only, if one has collected <b>PAPI_STL_RES</b> and <b>PAPI_TOT_CYC</b> counters while measurement. How to do it see <a href="http://scorepci.pages.jsc.fz-juelich.de/scorep-pipelines/docs/scorep-4.1/html/measurement.html#perf_counters"> Score-P manual</a>
+
+@page AdvisorPOPHybridAddTestsNoWaitINS_efficiency
+@section  nowait_instructions_hyb_add Instructions (only computation)
+<b>Instructions (only computation)</b> indicates the number of CPU instructions executed in the computation code, which contributes to the <b>@ref computation_time_hyb_add</b>.
+
+@page AdvisorPOPHybridAddTestsMissingNoWaitINS_efficiency
+@section  missing_no_wait_instructions_hyb_add Missing Instructions (only computation)?
+@ref nowait_instructions_hyb_add metric is  available only, if one has collected <b>PAPI_TOT_INS</b> counters while measurement. How to do it see <a href="http://scorepci.pages.jsc.fz-juelich.de/scorep-pipelines/docs/scorep-4.1/html/measurement.html#perf_counters"> Score-P manual</a>
+
+@page AdvisorPOPHybridAddTestsComputationTime
+@section  computation_time_hyb_add Computation time
+<b>Computation time</b> indicated total time spend in the computation call path <b>without</b> MPI, OpenMP, POSIX threads, std::threads, CUDA, OpenCL, OpenACC, SHMEM. With another words, it is the user code.
+
+@page AdvisorPOPHybridAddTestsMissingComputationTime
+@section  missing_computation_time_hyb_add Missing Computation time?
+@ref computation_time_hyb_add metric is a basic Cube metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another than Score-P/Scalasca, it might have missing metric <b>Time</b>.
+
+@page AdvisorBSPOPHybridTestsParallel_efficiency
+@section  hybrid_parallel_efficiency_bsc Hybrid Parallel Efficiency
+<b>Hybrid Parallel Efficiency (HPE)</b> reveals the inefficiency in processes and threads utilization. These are measured with <b>Hybrid Load Balance Efficiency</b> and <b>Hybrid Communication Efficiency</b>, and HPE can be computed directly or as a product of these two sub-metrics:
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{HPE=\frac{avg(computation\; time)}{max(runtime)} \f}
+  <tr><td> = @ref hybrid_lb_efficiency_bsc &sdot; @ref hybrid_comm_efficiency_bsc
+</table>
+
+@page AdvisorBSPOPHybridTestsMissing_parallel_efficiency
+@section  missing_hybrid_parallel_efficiency_bsc Missing Hybrid Parallel Efficiency?
+@ref hybrid_parallel_efficiency_bsc metric is a basic POP metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another tool than Score-P/Scalasca, it might have missing metric <b>Time</b>. In this case POP analysis is not possible.
+
+@page AdvisorBSPOPHybridTestsLoadBalance_efficiency
+@section hybrid_lb_efficiency_bsc Hybrid Load Balance Efficiency
+<b>Hybrid Load Balance Efficiency</b> can be computed as follows:
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{Hybrid\; Load\; Balance\; Efficiency=\frac{avg(computation\; time)}{max(computation\; time)} \f}
+</table>
+
+@page AdvisorBSPOPHybridTestsMissing_loadbalance_efficiency
+@section  missing_hybrid_lb_efficiency_bsc Missing Hybrid Load Balance Efficiency?
+@ref hybrid_lb_efficiency_bsc metric is a basic POP metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another tool than Score-P/Scalasca, it might have missing metric <b>Time</b>. In this case POP analysis is not possible.
+
+@page AdvisorBSPOPHybridTestsCommunication_efficiency
+@section hybrid_comm_efficiency_bsc Hybrid Communication Efficiency
+<b>Hybrid Communication Efficiency</b> can be evaluated directly by following formula:
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{Hybrid\; Communication\; Efficiency=\frac{max(computation\; time)}{max(runtime)} \f}
+</table>
+
+This metric identifies when code is inefficient because it spends a large amount of time communicating rather than performing useful computations.
+
+@page AdvisorBSPOPHybridTestsMissing_communication_efficiency
+@section  missing_hybrid_comm_efficiency_bsc Missing Hybrid Communication Efficiency?
+@ref hybrid_comm_efficiency_bsc metric is a basic POP metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another tool than Score-P/Scalasca, it might have missing metric <b>Time</b>. In this case POP analysis is not possible.
+
+@page AdvisorBSPOPHybridTestsMPIParallel_efficiency
+@section  mpi_parallel_efficiency_bsc MPI Parallel Efficiency
+<b>MPI Parallel Efficiency (MPE)</b> reveals the inefficiency in MPI processes. MPE can be computed directly or as a product of @ref mpi_lb_efficiency_bsc and @ref mpi_comm_efficiency_bsc :
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{MPE=\frac{avg(time\; outside\; of\; MPI)}{max(runtime)} \f}
+  <tr><td> = @ref mpi_lb_efficiency_bsc &sdot; @ref mpi_comm_efficiency_bsc
+</table>
+
+@page AdvisorBSPOPHybridTestsMissing_MPIparallel_efficiency
+@section  missing_mpi_parallel_efficiency_bsc Missing MPI Parallel Efficiency?
+@ref mpi_parallel_efficiency_bsc metric is a basic POP metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another tool than Score-P/Scalasca, it might have missing metric <b>Time</b>. In this case POP analysis is not possible.
+
+@page AdvisorBSPOPHybridTestsMPILoad_balance_efficiency
+@section mpi_lb_efficiency_bsc MPI Load Balance Efficiency
+<b>MPI Load Balance Efficiency</b> can be computed as follows:
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{MPI\; Load\; Balance\; Efficiency=\frac{avg(time\; outside\; of\; MPI)}{max(time\; outside\; of\; MPI)} \f}
+</table>
+
+@page AdvisorBSPOPHybridTestsMissing_MPIload_balance_efficiency
+@section  missing_mpi_lb_efficiency_bsc Missing MPI Load Balance Efficiency?
+@ref mpi_lb_efficiency_bsc metric is a basic POP metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another tool than Score-P/Scalasca, it might have missing metric <b>Time</b>. In this case POP analysis is not possible.
+
+@page AdvisorBSPOPHybridTestsMPICommunication_efficiency
+@section mpi_comm_efficiency_bsc MPI Communication Efficiency
+<b>MPI Communication Efficiency</b> can be evaluated directly by following formula:
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{MPI\; Communication\; Efficiency=\frac{max(time\; outside\; of\; MPI)}{max(runtime)} \f}
+</table>
+
+This metric identifies when code is inefficient because it spends a large amount of time communicating rather than performing useful computations.
+
+@page AdvisorBSPOPHybridTestsMissing_MPIcommunication_efficiency
+@section  missing_mpi_comm_efficiency_bsc Missing MPI Communication Efficiency?
+@ref mpi_comm_efficiency_bsc metric is a basic POP metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another tool than Score-P/Scalasca, it might have missing metric <b>Time</b>. In this case POP analysis is not possible.
+
+@page AdvisorBSPOPHybridTestsOMPParallel_efficiency
+@section  omp_parallel_efficiency_bsc OpenMP Parallel Efficiency
+<b>OpenMP Parallel Efficiency (OMPE)</b> reveals the inefficiency in OpenMP threads. OMPE can be computed directly or as a division @ref hybrid_parallel_efficiency_bsc by @ref mpi_parallel_efficiency_bsc :
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{OMPE=\frac{avg(computation\; time)}{avg(time\; outside\; of\; MPI)} \f}
+  <tr><td> = @ref hybrid_parallel_efficiency_bsc / @ref mpi_parallel_efficiency_bsc
+</table>
+
+@page AdvisorBSPOPHybridTestsMissing_OMPparallel_efficiency
+@section  missing_omp_parallel_efficiency_bsc Missing OpenMP Parallel Efficiency?
+@ref omp_parallel_efficiency_bsc metric is a basic POP metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another tool than Score-P/Scalasca, it might have missing metric <b>Time</b>. In this case POP analysis is not possible.
+
+@page AdvisorBSPOPHybridTestsOMPLoadBalance_efficiency
+@section omp_lb_efficiency_bsc OpenMP Load Balance Efficiency
+<b>OpenMP Load Balance Efficiency</b> can be computed as follows:
+
+<CENTER>
+OpenMP Load Balance Efficiency = @ref hybrid_lb_efficiency_bsc / @ref mpi_lb_efficiency_bsc
+</CENTER>
+
+@page AdvisorBSPOPHybridTestsMissing_OMPloadbalance_efficiency
+@section  missing_omp_lb_efficiency_bsc Missing OpenMP Load Balance Efficiency?
+@ref omp_lb_efficiency_bsc metric is a basic POP metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another tool than Score-P/Scalasca, it might have missing metric <b>Time</b>. In this case POP analysis is not possible.
+
+@page AdvisorBSPOPHybridTestsOMPCommunication_efficiency
+@section omp_comm_efficiency_bsc OpenMP Communication Efficiency
+<b>OpenMP Communication Efficiency</b> can be evaluated directly by following formula:
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{OpenMP\; Communication\; Efficiency=\frac{max(computation\; time)}{max(time\; outside\; of\; MPI)} \f}
+  <tr><td> = @ref hybrid_comm_efficiency_bsc / @ref mpi_comm_efficiency_bsc
+</table>
+
+@page AdvisorBSPOPHybridTestsMissing_OMPcommunication_efficiency
+@section  missing_omp_comm_efficiency_bsc Missing OpenMP Communication Efficiency?
+@ref omp_comm_efficiency_bsc metric is a basic POP metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another tool than Score-P/Scalasca, it might have missing metric <b>Time</b>. In this case POP analysis is not possible.
+
+@page AdvisorBSPOPHybridTestsIpc
+@section  ipc_bsc IPC (only computation)
+<b>IPC</b> indicates number of instructions executed by CPU per clock cycle. The higher the value the better the CPU performance. It is computed as a ration of <b>PAPI_TOT_INS</b> and <b>PAPI_TOT_CYC</b> for useful (user) work.
+
+@page AdvisorBSPOPHybridTestsMissing_ipc
+@section  missing_ipc_bsc Missing IPC?
+@ref ipc_bsc  metric is available only, if one has collected <b>PAPI_TOT_INS</b> and <b>PAPI_TOT_CYC</b> counters while measurement. How to do it see <a href="http://scorepci.pages.jsc.fz-juelich.de/scorep-pipelines/docs/scorep-4.1/html/measurement.html#perf_counters"> Score-P manual</a>
+
+@page AdvisorBSPOPHybridTestsStalled_resources
+@section  stalled_resources_bsc Stalled resources (only computation)
+<b>Stalled resources</b> indicates number of computational cycles, where processor has been waiting for some resources to the total number of cycles. It is calculated as the ratio of <b>PAPI_RES_STL</b> and <b>PAPI_TOT_CYC</b> for useful (user) work.
+
+@page AdvisorBSPOPHybridTestsMissing_stalled_resources
+@section  missing_stalled_resources_bsc Missing Stalled resources?
+@ref stalled_resources_bsc metric is available only, if one has collected <b>PAPI_STL_RES</b> and <b>PAPI_TOT_CYC</b> counters while measurement. How to do it see <a href="http://scorepci.pages.jsc.fz-juelich.de/scorep-pipelines/docs/scorep-4.1/html/measurement.html#perf_counters"> Score-P manual</a>
+
+@page AdvisorBSPOPHybridTestsNoWaitINS_efficiency
+@section  nowait_instructions_bsc Instructions (only computation)
+<b>Instructions (only computation)</b> indicates the number of CPU instructions executed in the computation code, which contributes to the <b>@ref computation_time_bsc</b>.
+
+@page AdvisorBSPOPHybridTestsMissingNoWaitINS_efficiency
+@section  missing_no_wait_instructions_bsc Missing Instructions (only computation)?
+@ref nowait_instructions_bsc metric is  available only, if one has collected <b>PAPI_TOT_INS</b> counters while measurement. How to do it see <a href="http://scorepci.pages.jsc.fz-juelich.de/scorep-pipelines/docs/scorep-4.1/html/measurement.html#perf_counters"> Score-P manual</a>
+
+@page AdvisorBSPOPHybridTestsComputationTime
+@section  computation_time_bsc Computation time
+<b>Computation time</b> indicated total time spend in the computation call path <b>without</b> MPI, OpenMP, POSIX threads, std::threads, CUDA, OpenCL, OpenACC, SHMEM. With another words, it is the user code.
+
+@page AdvisorBSPOPHybridTestsMissingComputationTime
+@section  missing_computation_time_bsc Missing Computation time?
+@ref computation_time_bsc metric is a basic Cube metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another than Score-P/Scalasca, it might have missing metric <b>Time</b>.
+
+@page AdvisorJSCTestsLoad_balance
+@section  lb_efficiency_jsc MPI computation Load Balance
+<b>MPI computation Load Balance</b> can be evaluated directly by following formula:
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{MPI\; Computation\; Load\; Balance=\frac{avg(computation\; time )}{max(runtime)} \f}
+</table>
+
+@page AdvisorJSCTestsMissing_load_balance
+@section  missing_lb_efficiency_jsc Missing MPI computation Load Balance?
+@ref lb_efficiency_jsc metric is a basic POP metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another tool than Score-P/Scalasca, it might have missing metric <b>Time</b>. In this case POP analysis is not possible.
+
+@page AdvisorJSCTestsCommunication_efficiency
+@section comm_efficiency_jsc MPI communication Efficiency
+<b>MPI communication Efficiency (MPI CommE)</b> can be evaluated directly by following formula:
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{MPI CommE=\frac{max(computation\; time )}{max(runtime)} \f}
+</table>
+
+<b>MPI CommE</b> identifies when code is inefficient because it spends a large amount of time communicating rather than performing useful computations. <b>MPI CommE</b> is composed of two additional metrics that reflect two causes of excessive time within communication:
+<ul>
+<li>Processes waiting at communication points for other processes to arrive (i.e. serialisation)</li>
+<li>Processes transferring large amounts of data relative to the network capacity</li>
+</ul>
+
+These are measured using @ref serialisation_efficiency_jsc and @ref transfer_efficiency_jsc. Combination of these two sub-metrics gives us <b>Communication Efficiency</b>:
+
+<CENTER>
+CommE = @ref serialisation_efficiency_jsc &sdot; @ref transfer_efficiency_jsc
+</CENTER>
+
+To obtain these two sub-metrics we need to perform Scalasca trace analysis which identifies serialisations and inefficient communication patterns.
+
+@page AdvisorJSCTestsMissing_communication_efficiency
+@section  missing_communication_efficiency_jsc Missing MPI communication Efficiency?
+@ref comm_efficiency_jsc metric is a basic POP metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another tool than Score-P/Scalasca, it might have missing metric <b>Time</b>. In this case POP analysis is not possible.
+
+@page AdvisorJSCTestsSerialisation_efficiency
+@section  serialisation_efficiency_jsc Serialisation Efficiency
+<b>Serialisation Efficiency (SerE)</b> measures inefficiency due to idle time within communications, i.e. time where no data is transferred, and is expressed as:
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{SerE=maximum\; across\; processes(\frac{computation\; time}{total\; runtime\; on\; ideal\; network}) \f}
+</table>
+
+where <b>total run-time on ideal network</b> is a runtime without detected by Scalasca waiting time and MPI I/O time.
+
+@page AdvisorJSCTestsMissing_serialisation_efficiency
+@section  missing_serialisation_efficiency_jsc Missing Serialisation Efficiency?
+@ref serialisation_efficiency_jsc metric is available only, if MPI wait states have been detected and measured.
+Hence it is only available for trace analysis results of Scalasca such as <b>scout.cubex</b> or <b>trace.cubex</b>
+
+@page AdvisorJSCTestsTransfer_efficiency
+@section  transfer_efficiency_jsc Transfer Efficiency
+<b>Transfer Efficiency (TE)</b> measures inefficiencies due to time spent in data transfers:
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{TE=\frac{maximum\; across\; processes(total\; runtime\; on\; ideal\; network)}{maximum\; across\; processes(total\; measured\; runtime)} \f}
+</table>
+
+where <b>total run-time on ideal network</b> is a runtime without detected by Scalasca waiting time and MPI I/O time.
+      
+@page AdvisorJSCTestsMissing_transfer_efficiency
+@section  missing_transfer_efficiency_jsc Missing Transfer Efficiency?
+@ref transfer_efficiency_jsc metric is available only, if MPI wait states have been detected and measured.
+Hence it is only available for trace analysis results of Scalasca such as <b>scout.cubex</b> or <b>trace.cubex</b>
+
+@page AdvisorJSCTestsAmdahl_efficiency
+@section  amdahl_jsc OpenMP Amdahl's Efficiency
+<b>OpenMP Amdahl's Efficiency</b> indicates serial computation and can be computed as follows:
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{Amdahl's\; Efficiency=\frac{parallel\; execution\; time}{total\; runtime} \f}
+</table>
+
+where <b>parallel execution time</b> is a time spent in OpenMP parallel regions. Amdahl's Efficiency computed per MPI rank, significant difference between MAX and MIN values indicate that some process have bigger serialisation part than others.
+
+@page AdvisorJSCTestsMissingAmdahl_efficiency
+@section  missing_amdahl_jsc Missing OpenMP Amdahl's Efficiency?
+@ref amdahl_jsc metric is a basic Cube metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another than Score-P/Scalasca, it might have missing metric <b>Time</b>.
+
+@page AdvisorJSCTestsOmpLoad_balance
+@section  omp_lb_jsc OpenMP Load Balance Efficiency
+<b>OpenMP Load Balance Efficiency</b> reveals the inefficiency in OpenMP parallel regions caused by imbalance and can be computed as follows:
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{OpenMP\; Load\; Balance\; Efficiency=\frac{avg(computation\; time\; in\; OpenMP)}{max(computation\; time\; in\; OpenMP)} \f}
+</table>
+
+This metric computed per MPI rank and average across MPIs is shown. Moreover, MIN and MAX values are also available by click on metric bar. Statistics shows if there is considerable difference in workload across MPI ranks.
+
+@page AdvisorJSCTestsMissing_omp_load_balance
+@section  missing_omp_lb_jsc Missing OpenMP Load Balance Efficiency?
+@ref omp_lb_jsc metric is enabled if application has OpenMP part.
+
+@page AdvisorJSCTestsOmpSerialisation_efficiency
+@section  omp_ser_jsc OpenMP Serialisation Efficiency
+<b>OpenMP Serialisation Efficiency</b> indicates serialisation within OpenMP regions across MPI ranks (e.g. time in barriers, critical sections, atomics, etc.) and can be computed as follows:
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{OpenMP\; Serialisation\; Efficiency=\frac{max(runtime\; in\; OpenMP\; without\; serialisation)}{max(runtime\; in\; OpenMP\; without\; management\; overhead)} \f}
+</table>
+
+If <b>management overhead</b> is not known due to missing Scalasca analysis, <b>total runtime without management overhead</b> is equal to total runtime.
+<b>OpenMP Serialisation Efficiency</b> computed per MPI rank and average across MPIs is shown. Moreover, MIN and MAX values are also available by click on metric bar. Statistics shows if there is considerable difference in serialisation across MPI ranks.
+
+@page AdvisorJSCTestsMissing_omp_serialisation_efficiency
+@section  missing_omp_ser_jsc Missing OpenMP Serialisation Efficiency?
+@ref omp_ser_jsc metric is enabled if application has OpenMP part.
+
+@page AdvisorJSCTestsIpc
+@section  ipc_jsc IPC (only computation)
+<b>IPC</b> indicates number of instructions executed by CPU per clock cycle. The higher the value the better the CPU performance. It is computed as a ration of <b>PAPI_TOT_INS</b> and <b>PAPI_TOT_CYC</b> for useful (user) work.
+
+@page AdvisorJSCTestsMissing_ipc
+@section  missing_ipc_jsc Missing IPC?
+@ref ipc_jsc  metric is available only, if one has collected <b>PAPI_TOT_INS</b> and <b>PAPI_TOT_CYC</b> counters while measurement. How to do it see <a href="http://scorepci.pages.jsc.fz-juelich.de/scorep-pipelines/docs/scorep-4.1/html/measurement.html#perf_counters"> Score-P manual</a>
+
+@page AdvisorJSCTestsStalled_resources
+@section  stalled_resources_jsc Stalled resources (only computation)
+<b>Stalled resources</b> indicates number of computational cycles, where processor has been waiting for some resources to the total number of cycles. It is calculated as the ratio of <b>PAPI_RES_STL</b> and <b>PAPI_TOT_CYC</b> for useful (user) work.
+
+@page AdvisorJSCTestsMissing_stalled_resources
+@section  missing_stalled_resources_jsc Missing Stalled resources?
+@ref stalled_resources_jsc metric is available only, if one has collected <b>PAPI_STL_RES</b> and <b>PAPI_TOT_CYC</b> counters while measurement. How to do it see <a href="http://scorepci.pages.jsc.fz-juelich.de/scorep-pipelines/docs/scorep-4.1/html/measurement.html#perf_counters"> Score-P manual</a>
+
+@page AdvisorJSCTestsNoWaitINS_efficiency
+@section  nowait_instructions_jsc Instructions (only computation)
+<b>Instructions (only computation)</b> indicates the number of CPU instructions executed in the computation code, which contributes to the <b>@ref computation_time_jsc</b>.
+
+@page AdvisorJSCTestsMissingNoWaitINS_efficiency
+@section  missing_no_wait_instructions_jsc Missing Instructions (only computation)?
+@ref nowait_instructions_jsc metric is  available only, if one has collected <b>PAPI_TOT_INS</b> counters while measurement. How to do it see <a href="http://scorepci.pages.jsc.fz-juelich.de/scorep-pipelines/docs/scorep-4.1/html/measurement.html#perf_counters"> Score-P manual</a>
+
+@page AdvisorJSCTestsComputationTime
+@section  computation_time_jsc Computation time
+<b>Computation time</b> indicated total time spend in the computation call path <b>without</b> MPI, OpenMP, POSIX threads, std::threads, CUDA, OpenCL, OpenACC, SHMEM. With another words, it is the user code.
+
+@page AdvisorJSCTestsMissingComputationTime
+@section  missing_computation_time_jsc Missing Computation time?
+@ref computation_time_jsc metric is a basic Cube metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another than Score-P/Scalasca, it might have missing metric <b>Time</b>.
+
+@page AdvisorPOPTestsParallel_efficiency
+@section  parallel_efficiency Parallel Efficiency
+<b>Parallel Efficiency (PE)</b> reveals the inefficiency in splitting computation over processes and then communicating data between processes. As with GE, PE is a compound metric whose components reflects two important factors in achieving good parallel performance in code:
+<ul>
+   <li>Ensuring even distribution of computational work across processes</li>
+   <li>Minimizing time communicating data between processes</li>
+</ul>
+These are measured with <b>Load Balance Efficiency</b> and <b>Communication Efficiency</b>, and PE is defined as the product of these two sub-metrics:
+
+<CENTER>
+PE = @ref load_balance &sdot; @ref communication_efficiency
+</CENTER>
+
+@page AdvisorPOPTestsMissing_parallel_efficiency
+@section  missing_parallel_efficiency Missing Parallel Efficiency?
+@ref parallel_efficiency metric is a basic POP metric and is available for every Score-P/Scalasca measurement.If Cube Report was produced by another tool than Score-P/Scalasca, it might have missing metric <b>Time</b>. In this case POP analysis is not possible.
+
+@page AdvisorPOPTestsLoad_balance
+@section  load_balance Load Balance
+<b>Load Balance (LB)</b> is computed as the ratio between average useful computation time (across all processes) and maximum useful computation time (also across all processes):
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{LB=\frac{avg(computation\; time)}{max(computation\; time)} \f}
+</table>
+
+Thus it shows how big is a difference between average and maximal computation.
+
+@page AdvisorPOPTestsMissing_load_balance
+@section  missing_load_balance Missing Load Balance?
+@ref load_balance metric is a basic POP metric and is available for every Score-P/Scalasca measurement.If Cube Report was produced by another tool than Score-P/Scalasca, it might have missing metric <b>Time</b>. In this case POP analysis is not possible.
+
+@page AdvisorPOPTestsCommunication_efficiency
+@section  communication_efficiency Communication Efficiency
+<b>Communication Efficiency (CommE)</b> is the maximum across all processes of the ratio between useful computation time and total run-time:
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{CommE=maximum\; across\; processes(\frac{computation\; time}{total\; runtime}) \f}
+</table>
+
+CommE identifies when code is inefficient because it spends a large amount of time communicating rather than performing useful computations. CommE is composed of two additional metrics that reflect two causes of excessive time within communication:
+<ul>
+<li>Processes waiting at communication points for other processes to arrive (i.e. serialisation)</li>
+<li>Processes transferring large amounts of data relative to the network capacity</li>
+</ul>
+
+These are measured using @ref serialisation_efficiency and @ref transfer_efficiency. Combination of these two sub-metrics gives us <b>Communication Efficiency</b>:
+
+<CENTER>
+CommE = @ref serialisation_efficiency &sdot; @ref transfer_efficiency
+</CENTER>
+
+To obtain these two sub-metrics we need to perform Scalasca trace analysis which identifies serialisations and inefficient communication patterns.
+
+@page AdvisorPOPTestsMissing_communication_efficiency
+@section  missing_communication_efficiency Missing Communication Efficiency?
+@ref communication_efficiency metric is a basic POP metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another tool than Score-P/Scalasca, it might have missing metric <b>Time</b>. In this case POP analysis is not possible.
+
+@page AdvisorPOPTestsSerialisation_efficiency 
+@section  serialisation_efficiency Serialisation Efficiency
+<b>Serialisation Efficiency (SerE)</b> measures inefficiency due to idle time within communications, i.e. time where no data is transferred, and is expressed as:
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{SerE=maximum\; across\; processes(\frac{computation\; time}{total\; runtime\; on\; ideal\; network}) \f}
+</table>
+
+where <b>total run-time on ideal network</b> is a runtime without detected by Scalasca waiting time and MPI I/O time.
+
+@page AdvisorPOPTestsMissing_serialisation_efficiency
+@section  missing_serialisation_efficiency Missing Serialisation Efficiency?
+@ref serialisation_efficiency metric is available only, if MPI wait states have been detected and measured.
+Hence it is only available for trace analysis results of Scalasca such as <b>scout.cubex</b> or <b>trace.cubex</b>
+
+@page AdvisorPOPTestsTransfer_efficiency
+@section  transfer_efficiency Transfer Efficiency
+<b>Transfer Efficiency (TE)</b> measures inefficiencies due to time spent in data transfers:
+
+<table align="center">
+  <tr><td>\f{eqnarray*}{TE=\frac{maximum\; across\; processes(total\; runtime\; on\; ideal\; network)}{maximum\; across\; processes(total\; measured\; runtime )} \f}
+</table>
+
+where <b>total run-time on ideal network</b> is a runtime without detected by Scalasca waiting time and MPI I/O time.
+
+@page AdvisorPOPTestsMissing_transfer_efficiency
+@section  missing_transfer_efficiency Missing Transfer Efficiency?
+@ref transfer_efficiency metric is available only, if MPI wait states have been detected and measured.
+Hence it is only available for trace analysis results of Scalasca such as <b>scout.cubex</b> or <b>trace.cubex</b>
+
+@page AdvisorPOPTestsIpc
+@section  ipc IPC (only computation)
+<b>IPC</b> indicates number of instructions executed by CPU per clock cycle. The higher the value the better the CPU performance. It is computed as a ration of <b>PAPI_TOT_INS</b> and <b>PAPI_TOT_CYC</b> for useful (user) work.
+
+@page AdvisorPOPTestsStalled_resources
+@section  stalled_resources Stalled resources (only computation)
+<b>Stalled resources</b> indicates number of computational cycles, where processor has been waiting for some resources to the total number of cycles. It is calculated as the ratio of <b>PAPI_RES_STL</b> and <b>PAPI_TOT_CYC</b> for useful (user) work.
+
+@page AdvisorPOPTestsMissing_stalled_resources
+@section  missing_stalled_resources Missing Stalled resources?
+@ref stalled_resources metric is available only, if one has collected <b>PAPI_STL_RES</b> and <b>PAPI_TOT_CYC</b> counters while measurement. How to do it see <a href="http://scorepci.pages.jsc.fz-juelich.de/scorep-pipelines/docs/scorep-4.1/html/measurement.html#perf_counters"> Score-P manual</a>
+
+@page AdvisorPOPTestsNoWaitINS_efficiency
+@section  nowait_instructions Instructions (only computation)
+<b>Instructions (only computation)</b> indicates the number of CPU instructions executed in the computation code, which contributes to the <b>@ref computation_time</b>. 
+
+@page AdvisorPOPTestsMissingNoWaitINS_efficiency
+@section  missing_no_wait_instructions Missing Instructions (only computation)
+@ref nowait_instructions metric is  available only, if one has collected <b>PAPI_TOT_INS</b> counters while measurement. How to do it see <a href="http://scorepci.pages.jsc.fz-juelich.de/scorep-pipelines/docs/scorep-4.1/html/measurement.html#perf_counters"> Score-P manual</a>
+
+@page AdvisorPOPTestsComputationTime
+@section  computation_time Computation time
+<b>Computation time</b> indicated total time spend in the computation call path <b>without</b> MPI, OpenMP, POSIX threads, std::threads, CUDA, OpenCL, OpenACC, SHMEM. With another words, it is the user code.
+
+@page AdvisorPOPTestsMissingComputationTime
+@section  missing_computation_time Missing Computation time?
+@ref computation_time metric is a basic Cube metric and is available for every Score-P/Scalasca measurement. If Cube Report was produced by another than Score-P/Scalasca, it might have missing metric <b>Time</b>.
+
+@page AdvisorPOPComputation_efficiency 
+@section  computation_efficiency Computation Efficiency
+<b>Computation Efficiency</b> is a ratio of total time in useful computation summed over all processes. For strong scaling (i.e. problem size is constant) it is the ratio of total time in useful computation for a reference case (e.g. on 1 process or 1 compute node) to the total time as the number of processes (or nodes) is increased. For <b>Computation Efficiency</b> to have a value of 1 this time must remain constant regardless of the number of processes.
+
+Insight into possible causes of poor computation scaling can be investigated using metrics devised from processor hardware counter data. 
+Two causes of poor computational scaling are:
+<ul>
+   <li> Dividing work over additional processes increases the total computation required
+    <li>Using additional processes leads to contention for shared resources
+</ul>
+and we investigate these using @ref  instruction_efficiency and @ref ipc_efficience.
+
+@page AdvisorPOPInstruction_efficiency 
+@section  instruction_efficiency Instruction Efficiency
+<b>Instruction Efficiency</b> is the ratio of total number of useful instructions for a reference case (e.g. 1 processor) compared to values when increasing the numbers of processes. A decrease in Instruction Efficiency corresponds to an increase in the total number of instructions required to solve a computational problem.
+
+@page AdvisorPOPTestsIpc_efficiency
+@section  ipc_efficience IPC Efficiency
+<b>IPC Efficiency</b> compares IPC to the reference, where lower values indicate that rate of computation has slowed. Typical causes for this include decreasing cache hit rate and exhaustion of memory bandwidth, these can leave processes stalled and waiting for data.
+
+@page AdvisorPOPTestsMissing_ipc
+@section  missing_ipc Missing IPC?
+@ref ipc_efficience  metric is available only, if one has collected <b>PAPI_TOT_INS</b> and <b>PAPI_TOT_CYC</b> counters while measurement. How to do it see <a href="http://scorepci.pages.jsc.fz-juelich.de/scorep-pipelines/docs/scorep-4.1/html/measurement.html#perf_counters"> Score-P manual</a>
+
+@section knl_vectorization_metrics KNL Vectorization metrics
+
+We focus on the three metrics. The first metric calculates the computational density, i.e. the number of operations performed on average for each piece
+of loaded data. The <b>L1 compute to data access ratio</b> can be used to
+judge how suitable an application is to run on the KNL architecture. Ideally, operations should be vectorized and each datum fetched from L1 cache should be used for
+multiple operations.
+
+Similar to this, the <b>L2 compute to data access ratio</b> is calculated as the number of vector operations against the loads that initially miss the L1 cache. While the L1 metric is critical in esti- mating a codes general suitability, the L2 metric is an indicator whether the code is operating efficiently. 
+
+The thresholds are considered the limits where an investigation into the code section?s vectorization would be useful. These limits are based on recommendations of Intel R \cite{IntelKNLR} for the KNL architecture and
+while these hold true for most applications running on KNL, they are only guide-
+lines and should be applied with care. 
+
+An additional metric, the <b>VPU intensity</b>, offers a rule of thumb on how well
+a loop is vectorized, calculating the proportion of vectorized operations on total
+arithmetic operations. This metric should be applied only to small pieces of code
+and certain non-arithmetic operations, such as mask manipulation instructions, are
+counted as vector operations, which can skew this ratio.
+One defines the metrics as ratios of hardware counters provided by the KNL
+architecture. These can be accessed in Score-P through the <a href="http://scorepci.pages.jsc.fz-juelich.de/scorep-pipelines/docs/scorep-4.1/html/measurement.html#perf_counters">PAPI metrics interface</a>
+<ol>
+<li>Metric: L1 Compute to data access ratio  <br> Threshold: < 1 <br>
+\verbatim
+UOPS RETIRED.PACKED SIMD/ MEM UOPS RETIRED.ALL LOADS
+\endverbatim
+<li>
+Metric: L2 Compute to data access ratio <br>  Threshold: < 100? L1 Compute to data access ratio  <br> 
+\verbatim
+UOPS RETIRED.PACKED SIMD/ MEM UOPS RETIRED.L1 MISS LOADS
+\endverbatim
+<li>Metric: VPU intensity  <br> Threshold: < 0.5 <br> 
+\verbatim
+UOPS RETIRED.PACKED SIMD/ (UOPS RETIRED.PACKED SIMD + UOPS RETIRED.SCALAR SIMD)
+\endverbatim
+</ol>
+and can measured at a call-path level on each thread. To calculate all derived metrics,
+multiple native hardware counters have to be recorded. Since the KNL architecture
+provides only two general purpose counters per thread, multiple measurements have
+to be used to obtain the full set of counters required. 
+ 
+@page MeasurementForKnlMemoryAnalysis Memory analysis for KNL
+  
+In order to analyse quality of the computational code Advisor requires 
+that at least the  following metrics are collected: 
+<ol>
+<li>LLC_MISSES
+<li>knl_unc_imc0::UNC_M_CAS_COUNT:ALL:cpu=0,
+<li>knl_unc_imc1::UNC_M_CAS_COUNT:ALL:cpu=0,
+<li>knl_unc_imc2::UNC_M_CAS_COUNT:ALL:cpu=0,
+<li>knl_unc_imc3::UNC_M_CAS_COUNT:ALL:cpu=0,
+<li>knl_unc_imc4::UNC_M_CAS_COUNT:ALL:cpu=0 and 
+<li>knl_unc_imc5::UNC_M_CAS_COUNT:ALL:cpu=0
+ </ol>
+ How to do it see <a href="http://scorepci.pages.jsc.fz-juelich.de/scorep-pipelines/docs/scorep-4.1/html/measurement.html#perf_counters"> Score-P manual</a>
+
+@page MeasurementForKnlVectorizationAnalysis Vectorization analysis for KNL
+ 
+In order to analyse quality of the computational code Advisor requires 
+that at least following metrics are collected: 
+<ol>
+<li>MEM_UOPS_RETIRED:L1_MISS_LOADS,
+<li>MEM_UOPS_RETIRED:L2_MISS_LOADS
+<li>UOPS_RETIRED:PACKED_SIMD,
+<li>UOPS_RETIRED:SCALAR_SIMD
+</ol>
+How to do it see <a href="http://scorepci.pages.jsc.fz-juelich.de/scorep-pipelines/docs/scorep-4.1/html/measurement.html#perf_counters"> Score-P manual</a>
+
+
+
+@page AdvisorKNLTestsMemoryTransfer Memory transfer
+Number of transferred bytes.
+
+@page AdvisorKNLTestsMissingMemoryTransfer Missing  Memory transfer?
+@ref AdvisorKNLTestsMemoryTransfer metric is  available only, if one has collected <b>knl_unc_imc0::UNC_M_CAS_COUNT:ALL:cpu=0,
+knl_unc_imc1::UNC_M_CAS_COUNT:ALL:cpu=0,
+knl_unc_imc2::UNC_M_CAS_COUNT:ALL:cpu=0,
+knl_unc_imc3::UNC_M_CAS_COUNT:ALL:cpu=0,
+knl_unc_imc4::UNC_M_CAS_COUNT:ALL:cpu=0 and 
+knl_unc_imc5::UNC_M_CAS_COUNT:ALL:cpu=0</b> counters while measurement. How to do it see <a href="http://scorepci.pages.jsc.fz-juelich.de/scorep-pipelines/docs/scorep-4.1/html/measurement.html#perf_counters"> Score-P manual</a>
+
+
+
+
+@page AdvisorKNLTestsMemoryBandwidth Memory bandwidth
+Number of transferred bytes per runtime of the call path.
+
+@page AdvisorKNLTestsMissingMemoryBandwidth Missing  Memory bandwidth?
+@ref AdvisorKNLTestsMemoryBandwidth metric is  available only, if one has collected <b>knl_unc_imc0::UNC_M_CAS_COUNT:ALL:cpu=0,
+knl_unc_imc1::UNC_M_CAS_COUNT:ALL:cpu=0,
+knl_unc_imc2::UNC_M_CAS_COUNT:ALL:cpu=0,
+knl_unc_imc3::UNC_M_CAS_COUNT:ALL:cpu=0,
+knl_unc_imc4::UNC_M_CAS_COUNT:ALL:cpu=0 and 
+knl_unc_imc5::UNC_M_CAS_COUNT:ALL:cpu=0</b> counters while measurement. How to do it see <a href="http://scorepci.pages.jsc.fz-juelich.de/scorep-pipelines/docs/scorep-4.1/html/measurement.html#perf_counters"> Score-P manual</a>
+
+
+
+
+@page AdvisorKNLTestsLLCMiss LLC Miss metric
+Displays number of misses in last level cache.
+
+@page AdvisorKNLTestsMissingLLCMiss Missing LLC Miss metric?
+@ref AdvisorKNLTestsLLCMiss metric is  available only, if one has collected <b>LLC_MISSES</b> counters while measurement. How to do it see <a href="http://scorepci.pages.jsc.fz-juelich.de/scorep-pipelines/docs/scorep-4.1/html/measurement.html#perf_counters"> Score-P manual</a>
+
+
+
+@page AdvisorKNLTestsVPUIntensity VPU Intensity
+VPU intensity offers a rule of thumb on how well
+a loop is vectorized, calculating the proportion of vectorized operations on total
+arithmetic operations. This metric should be applied only to small pieces of code
+and certain non-arithmetic operations, such as mask manipulation instructions, are
+counted as vector operations, which can skew this ratio.
+\verbatim
+UOPS RETIRED.PACKED SIMD/ (UOPS RETIRED.PACKED SIMD + UOPS RETIRED.SCALAR SIMD)
+\endverbatim
+
+
+
+@page AdvisorKNLTestsMissingVPUIntensity  Missing VPU Intensity?
+@ref AdvisorKNLTestsVPUIntensity metric is  available only, if one has collected <b>UOPS\_RETIRED.PACKED\_SIMD, UOPS\_RETIRED.SCALAR\_SIMD</b> counters while measurement. How to do it see <a href="http://scorepci.pages.jsc.fz-juelich.de/scorep-pipelines/docs/scorep-4.1/html/measurement.html#perf_counters"> Score-P manual</a>
+
+
+@page AdvisorKNLTestsL1Comp2DataTest L1 to Computation ratio
+The <b>L1 compute to data access ratio</b> can be used to
+judge how suitable an application is to run on the KNL architecture. Ideally, operations should be vectorized and each datum fetched from L1 cache should be used for
+multiple operations.
+
+@page AdvisorKNLTestsMissingL1Comp2DataTest  Missing L1 to Computation ratio
+@ref AdvisorKNLTestsL1Comp2DataTest metric is  available only, if one has collected <b>UOPS\_RETIRED.PACKED\_SIMD, MEM\_UOPS\_RETIRED.ALL\_LOADS</b> counters while measurement. How to do it see <a href="http://scorepci.pages.jsc.fz-juelich.de/scorep-pipelines/docs/scorep-4.1/html/measurement.html#perf_counters"> Score-P manual</a>
+
+
+@page AdvisorKNLTestsL2Comp2Data L2 to L1 ratio
+Similar to this, the <b>L2 compute to data access ratio</b> is calculated as the number of vector operations against the loads that initially miss the L1 cache. While the L1 metric is critical in esti- mating a codes general suitability, the L2 metric is an indicator whether the code is operating efficiently. 
+
+
+@page AdvisorKNLTestsMissingL2Comp2Data  Missing L2 to L1
+@ref AdvisorKNLTestsL2Comp2Data metric is  available only, if one has collected <b>UOPS\_RETIRED.PACKED\_SIMD, MEM\_UOPS\_RETIRED.L1\_MISS\_LOADS</b> counters while measurement. How to do it see <a href="http://scorepci.pages.jsc.fz-juelich.de/scorep-pipelines/docs/scorep-4.1/html/measurement.html#perf_counters"> Score-P manual</a>
+
+
+
+
+//================================================================================================================================
+
+
+
+@page clientserver Client-Server
+
+@section server Cube Server
+cube_server is part of the cubelib installation.
+\verbatim
+cube_server [ -p N ] Bind socket on port N (default port: 3300)
+\endverbatim
+
+Many hosts don't allow ports to be accessed from the outside. You may use SSH tunneling (also referred to as SSH port forwarding)
+to route the local network traffic throught SSH to the remote host.<br>
+In the following example, cube_server is started with the default port 3300 on the remote server server.example.com.
+The traffic, which is sent to localhost:3000, will be forwarded to server.example.com on the same port.
+
+\verbatim
+[client]$ ssh -L 3300:server.example.com:3300 server.example.com
+[server.example.com]$ cube_server
+Cube Server: CubeLib-4.6.0 (external) [POSIX]
+cube_server[5247] Waiting for connections on port 3300.
+\endverbatim
+
+@section client Cube Client
+CubeGUI can also be used to open a cube file on a remote host which runs cube_server (see Figure \figref{open}).
+@img{openMenu.png,open,File menu,width=0.65\textwidth}
+After selecting "Open Url..." a remote file dialog appears (see Figure \figref{RemoteDialog}) .
+@img{openURL.png,RemoteDialog,Remote file dialog,width=0.65\textwidth}
+The first line contains the URL to the remote \latexonly cube server \endlatexonly @ref server. After having changed this line,
+the reload-Button on the right has to be pushed to reconnect to the server.
+
+
+//================================================================================================================================
+
+@page otherfeatures Other Features
+
+@section features Features enabled through statistic files
+
+In this section we will explain two features -- namely the display of
+statistical information about performance patterns which represent
+performance problems and the display of the most severe instances of these
+patterns in a trace browser -- which both are only available if a statistic
+file for the currently opened \cube file is present.  Currently, such a
+statistic file can be generated by the SCOUT analyzer \cite{wolf_ea04b}.
+The file format of statistic files is described in the Appendix
+\appref{statFormat}.
+
+For \cube to recognize the statistic file, it must be placed in the
+same directory as the \cube file.  The basename of the statistic file
+should be identical to that of the \cube file, but with the suffix
+\disp{.stat}.  For example, when the \cube file is called
+\disp{trace.cubex}, the corresponding statistic file is called
+\disp{trace.stat}.
+
+
+@section statistics Statistical information about performance patterns
+
+If a statistic file is provided, you can view statistical information about
+one or multiple patterns (for example in order to compare them). This is
+done by selecting the desired metrics in the metric-tree and then selecting
+the \emph{Statistics} menu item in the context menu. This brings up the
+box plot window as shown in Figure \figref{boxPlot}.
+
+
+@img{boxplot.png,boxPlot,Screenshot of a box plot as shown by \cube displaying statistical information about the selected patterns. The tooltip shows the exact values of the statistics.,width=0.65\textwidth}
+
+
+The box plot shows a graphical representation of the statistical data of
+the selected patterns.  The slender black lines on the top and the bottom
+designate the maximum and the minimum measured severity of the pattern,
+respectively. The lower and the upper borders of the white box indicate the
+values of the 25% and 75% quantile. The thick line inside the box
+represents the median of the values, while the dashed line indicates the
+mean.
+
+There are two ways of interacting with the box plot. You can zoom to a
+certain interval on the y-axis by clicking on a position with the height of
+the desired maximal or minimal value and by consecutively dragging the
+mouse to a position with the height of the corresponding other extreme
+value. You can reset the view (i.e., to undo all zooming) by clicking the
+middle mouse button somewhere on the box plot.
+
+If you are interested in more precise values for the severity statistics of
+a certain metric, you can click with the left mouse button somewhere in the 
+column of the desired
+metric, which will yield a small window (as shown in the top right corner
+of Figure \figref{boxPlot}) displaying the exact values of the statistics.
+Clicking with the right mouse button shows the information in a tooltip.
+
+
+@section tracebrowser Display of most severe pattern instances using a trace browser
+
+If a statistic file also contains information about the most severe
+instances of certain patterns, \cube can be connected to a trace browser
+(currently only Vampir \cite{brunst_ea03, vng08} is supported)
+in order to view the state of the program being analyzed at the time this most severe pattern instance
+occurred. For collective operations, the most severe instance is the one
+with the largest \emph{sum} of the waiting times of all processes, which is
+not necessarily the one with the largest maximal waiting time of each
+individual process.
+
+@img{vampir-connect.png,connection,The dialog windows for a connection to a trace browser e.g. Vampir,width=0.55\textwidth}
+
+To use this feature, you first have to connect to a trace browser by using
+the \emph{Connect to} menu item of the \emph{Vampir Plugin} submenu
+of the \emph{Plugin} menu.
+This will open one of the two dialog windows shown below.
+
+For Vampir, you have to specify the host name and port of the Vampir server
+you want to connect to and the path of the trace file you want to load.
+This will launch the Vampir client (if it is correctly configured) and load
+the specified trace file. To configure Vampir so that it can be started
+automatically by \cube, a service file  \disp{ com.gwt.vampir.service},
+describing the path to your Vampir client executable must be placed under
+\disp{(/usr/share/dbus-1/service)} or
+\disp{${HOME}/.local/share/dbus-1/services}. This service file must be
+exactly as shown below, with the exception that
+\disp{Exec} should point to your Vampir client executable.
+
+<center>
+@verbatim
+[D-BUS Service]
+Name=com.gwt.vampir
+Exec=/private/utils/bin/vng
+@endverbatim
+An example of the \disp{com.gwt.vampir.service} file
+</center>
+
+
+
+Once \cube is connected to a trace browser you can select the \emph{Max
+severity in trace browser} menu item of the metric-tree so that all
+connected trace browsers are zoomed to the (globally) most severe instance
+of the selected pattern.
+
+A more sophisticated feature of \cube is the ability to zoom to the most severe
+instance of a pattern in a selected call path. This can be done by
+selecting a metric in the metric-tree which will highlight the most severe
+call paths in the call-tree. You can then use the context menu of the call
+tree to select the \emph{Max severity in trace browser} menu item which  will
+then zoom all connected trace browsers to the most severe instance of the
+selected pattern with respect to the chosen call path (see
+Figure \figref{VampirPlugin}).
+
+@img{vampir-plugin.png,VampirPlugin,Context menu called on the metric \"Wait at Barrier\"\, showing the maximum severity in trace browser\, which results in the location of the worst instance shown in the timeline display of Vampir.,width=0.7\textwidth}
+
+@subsection vampirtroubles Troubleshooting 
+<ol>
+<li>In some D-BUS configurations Vampir does not start automatically. 
+    In this case it might solve the problem to have Vampir already running (with explicitly enabled D-BUS subsystem)
+    @verbatim
+        user@host: vampir --dbus&
+    @endverbatim 
+</li>
+<li>
+  On some HPC system it might be helpful to extend your environment. 
+  Add to your \texttt{.bashrc} file following code snippet:
+  @verbatim
+  ## test for an existing bus daemon, just to be safe
+  if test -z "$DBUS_SESSION_BUS_ADDRESS" ; then
+      ## if not found, launch a new one
+      eval `dbus-launch --sh-syntax`
+      echo "D-Bus per-session daemon address is: $DBUS_SESSION_BUS_ADDRESS"
+  fi
+  @endverbatim
+</li>
+</ol>
+
+
+
+\latexonly \newpage \endlatexonly
+
+@section ssync Synchronization of several cube instances
+The current state of a cube instance (selections, expanded tree items, ...) can be synchronized with other cube instances on the same or on different
+machines. The synchronization function uses the clipboard to exchange data, so no network protocol is required.
+Synchronization can be useful e.g. for following tasks:
+<ul>
+<li> Comparation of several runs of the same program with different number of processes or threads.
+<li>Examination of different metrics at the same time.
+</ul>
+
+@img{sync1.png,sync1,Enable Synchronization,width=0.5\textwidth}
+\latexonly
+\vspace*{-10mm} 
+\endlatexonly
+
+To enable Synchronization, the corresponding toolbar has to be enabled (Figure \figref{sync1}). Press the toolbar button with the red outgoing arrow to enable 
+sending of status information. 
+The current state is sent when the button is activated and after every change while the button is checked.
+To receive status information press the button with the white incoming arrow. If activated, cube listens for changed status information.
+<br>Tree items are identified by their label, not by the position in the tree.
+
+With the "Synchronize state" menu, you can select the information that is sent and received. By default, this is
+the state of the four trees. If you want to show different metrics in each cube instance,
+but synchronize the selected callpath and system-tree, you have to disable "Metric tree" (Figure \figref{sync2}).
+
+@img{sync2.png,sync2,Synchronization toolbar,width=0.45\textwidth}
+\latexonly \vspace*{-10mm} \endlatexonly
+
+@page keyboardcontrol Keyboard and mouse control
+
+<table>
+<tr><td>  Shift+F1 </td><td> Help: What's this? </td></tr>
+<tr><td>  Ctrl+O  </td><td> Shortcut for menu \disp{File \submenu Open} </td></tr> 
+<tr><td>  Ctrl+W  </td><td> Shortcut for menu \disp{File \submenu Close} </td></tr> 
+<tr><td>  Ctrl+Q </td><td> Shortcut for menu \disp{File \submenu Quit} </td></tr> 
+<tr><td>    <left-mouse click> </td><td> \emph{over menu/tool bar:} activate menu/function <br>
+                                 \emph{over value mode combo:} select value mode <br>
+                                 \emph{over tab:} switch to tab <br>
+                                 \emph{in tree:} select/deselect/expand/collapse items</td></tr>
+<tr><td>   <right-mouse click> </td><td> \emph{in tree:} context menu </td></tr>
+<tr><td>  Ctrl+<left-mouse click>  </td><td> \emph{in tree:} multiple selection/deselection </td></tr>
+<tr><td>  <left-mouse drag> </td><td> \emph{over scroll bar:} scroll</tr>
+<tr><td>   Up arrow </td><td> \emph{in tree:} move selection one item up (+Shift: multiple selection) </td></tr>
+<tr><td>   Down arrow </td><td> \emph{in tree:} move selection one item down (+Shift: multiple selection)</td></tr>
+<tr><td>   Left arrow </td><td> \emph{in scroll area:} scroll to the left </td></tr>
+<tr><td>   Right arrow </td><td> \emph{in scroll area:} scroll to the right</td></tr>
+<tr><td>   Ctrl+F </td><td> find tree item </td></tr>
+<tr><td>   F3 </td><td> move to next search result </td></tr>
+<tr><td>   Shift+F3 </td><td> move to previous search result </td></tr>
+</table>
+
+For keyboard shortcuts in different plugins, see the corresponding sections:
+<ul>
+    <li> @ref SourceCodeViewerPlugin
+    <li> @ref tkeyboardcontrol
+</ul>
+
+@page stylesheets Customization with Qt Stylesheets
+<h1>Style Sheet Editor</h1>
+
+Qt Style Sheets allow the user to customize the appearance of widgets. Qt Style Sheets are similar to HTML Cascading Style Sheets (CSS)
+but adapted to widgets. To define style sheets, open the Editor with \emph{Display \submenu Customize style sheet}.
+
+@img{cube-style.png,style,start style sheet editor,width=0.5\textwidth}
+
+The following example customizes the appearance of the three tree views. The tree items are drawn in black, selected tree items in red.  
+The background color of the tree items is set to lightgray, the background color of selected items to green.  
+To draw the tree items, the font family "Bitstream Charter" with 10 point size is used. 
+    <pre>QTreeView {
+      color: black;
+      background-color: lightgray; 
+      selection-color:red;
+      selection-background-color:lightgreen;
+      font-family: Bitstream Charter;
+      font-size: 10pt
+    }
+    </pre> 
+    For further information, refer to the Qt style sheet reference:
+    <ul>
+    <li><a href="https://doc.qt.io/qt-5/stylesheet-reference.html">List of widgets which can be customized</a>
+    <li><a href="https://doc.qt.io/qt-5/stylesheet-reference.html#list-of-properties">List of properties</a>
+    <li><a href="https://doc.qt.io/qt-5/stylesheet-syntax.html">Style sheet syntax</a>
+    </ul>
+*/

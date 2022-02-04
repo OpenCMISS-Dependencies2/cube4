@@ -1,0 +1,78 @@
+/****************************************************************************
+**  CUBE        http://www.scalasca.org/                                   **
+*****************************************************************************
+**  Copyright (c) 1998-2017                                                **
+**  Forschungszentrum Juelich GmbH, Juelich Supercomputing Centre          **
+**                                                                         **
+**  Copyright (c) 2009-2013                                                **
+**  German Research School for Simulation Sciences GmbH,                   **
+**  Laboratory for Parallel Programming                                    **
+**                                                                         **
+**  This software may be modified and distributed under the terms of       **
+**  a BSD-style license.  See the COPYING file in the package base         **
+**  directory for details.                                                 **
+****************************************************************************/
+
+
+/** @page appendix Appendix
+
+@section statFormat File format of statistics files
+
+Statistic files (for an example see \apptitledref{below,An example of a statistic file}) are simply
+text files which contain the necessary data.  The first line is always
+ignored but should look similar to that in the example as it simplifies the
+understanding for the human reader. \emph{All values in a statistic file
+are simply separated by an arbitrary number of spaces}.
+\beginfigure
+<small>
+\verbatim
+
+PatternName  MetricID Count  Mean   Median  Minimum  Maximum   Sum Variance Quartil25 Quartil75
+LateBroadcast       6     4 0.010 0.000031 0.000004 0.042856 0.042 0.000459
+- cnode: 5 enter: 0.245877 exit: 0.256608 duration: 0.042856
+
+WaitAtBarrier      18    20 0.018 0.006477 0.000002 0.065293 0.369 0.000698  0.000040  0.047409
+- cnode: 14 enter: 0.192332 exit: 0.192378 duration: 0.000100
+- cnode: 12 enter: 0.326120 exit: 0.335651 duration: 0.065293
+
+BarrierCompletion  17    20 0.000 0.000005 0.000002 0.000018 0.000 0.000000  0.000003  0.000009
+- cnode: 14 enter: 0.192332 exit: 0.192378 duration: 0.000009
+- cnode: 12 enter: 0.159321 exit: 0.165005 duration: 0.000018
+
+WaitAtIBarrier     27   144 0.001 0.000027 0.000001 0.028451 0.212 0.000028  0.000002  0.000437
+- cnode: 11 enter: 0.297292 exit: 0.297316 duration: 0.000057
+- cnode: 10 enter: 0.322577 exit: 0.332093 duration: 0.028451
+
+
+\endverbatim
+</small>
+\endfigure{An example of a statistic file,appendix,below}
+
+For each pattern there is a line which contains at least the pattern name
+(as plain text \emph{without spaces}), its corresponding metric id in the
+\cube file (integer as text) and the count -- i.e., how many instances
+of the pattern exist (also as integer). If more values are provided, there
+have to be the mean value, median, minimum and maximum as well as the sum
+(all as floating point numbers in arbitrary format). If one of these values
+is provided, all have to.  The next optional value is the variance (also as
+a floating point number).  The last two optional values of which both or
+none have to be provided are the 25% and the 75% quantile, also as
+floating point numbers.
+
+If any of these values is omitted, all following values have to be omitted,
+too. If for example the variance is not provided, the lower and the upper
+quartile must not be provided either.
+
+In the subsequent lines (there can be an arbitrary number), the information
+of the most severe instances is provided.  Each of these lines has to begin
+with a minus sign (-). Then the text \emph{cnode:}, followed by the cnode
+id of this instance in the \cube file (integer as text) is provided. The
+same holds for enter, exit and duration (floats as text).
+
+The begin of the next pattern is indicated by a blank line.
+
+\clearpage
+
+
+
+*/

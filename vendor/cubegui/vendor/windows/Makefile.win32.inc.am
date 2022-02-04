@@ -1,0 +1,46 @@
+##*************************************************************************##
+##  CUBE        http://www.scalasca.org/                                   ##
+##*************************************************************************##
+##  Copyright (c) 1998-2021                                                ##
+##  Forschungszentrum Juelich GmbH, Juelich Supercomputing Centre          ##
+##                                                                         ##
+##  Copyright (c) 2009-2015                                                ##
+##  German Research School for Simulation Sciences GmbH,                   ##
+##  Laboratory for Parallel Programming                                    ##
+##                                                                         ##
+##  This software may be modified and distributed under the terms of       ##
+##  a BSD-style license.  See the COPYING file in the package base         ##
+##  directory for details.                                                 ##
+##*************************************************************************##
+
+
+
+
+
+EXTRA_DIST += 	\
+		$(srcdir)/vendor/windows/GUI-plugin-advanced-colormap/plugin-advanced-colormap.pro \
+		$(srcdir)/vendor/windows/GUI-plugin-advisor/plugin-advisor.pro \
+		$(srcdir)/vendor/windows/GUI-plugin-barplot/plugin-barplot.pro\
+		$(srcdir)/vendor/windows/GUI-plugin-diff/plugin-diff.pro\
+		$(srcdir)/vendor/windows/GUI-plugin-scaling/plugin-scaling.pro\
+		$(srcdir)/vendor/windows/GUI-plugin-tau2cube/plugin-tau2cube.pro\
+		$(srcdir)/vendor/windows/GUI-plugin-graphwidgetcommon/plugin-graphwidgetcommon.pro\
+		$(srcdir)/vendor/windows/GUI-plugin-heatmap/plugin-heatmap.pro\
+		$(srcdir)/vendor/windows/GUI-plugin-launch/plugin-launch.pro\
+		$(srcdir)/vendor/windows/GUI-plugin-mean/plugin-mean.pro\
+		$(srcdir)/vendor/windows/GUI-plugin-merge/plugin-merge.pro\
+		$(srcdir)/vendor/windows/GUI-plugin-metriceditor/plugin-metriceditor.pro\
+		$(srcdir)/vendor/windows/GUI-plugin-metricident/plugin-metricident.pro\
+		$(srcdir)/vendor/windows/GUI-plugin-scorepconfig/plugin-scorepconfig.pro\
+		$(srcdir)/vendor/windows/GUI-plugin-sourcecodeviewer/plugin-sourcecodeviewer.pro\
+		$(srcdir)/vendor/windows/GUI-plugin-statistics/plugin-statistics.pro\
+		$(srcdir)/vendor/windows/GUI-plugin-sunburst/plugin-sunburst.pro\
+		$(srcdir)/vendor/windows/GUI-plugin-systemboxplot/plugin-systemboxplot.pro\
+		$(srcdir)/vendor/windows/GUI-plugin-systemtopology/plugin-systemtopology.pro\
+		$(srcdir)/vendor/windows/GUI-plugin-treeitemmarker/plugin-treeitemmarker.pro\
+		$(srcdir)/vendor/windows/GUI-qt-core/cube4gui.pro\
+		$(srcdir)/vendor/windows/GUI-qt/cube.pro	\
+		$(srcdir)/vendor/windows/Makefile.bat  \
+		$(srcdir)/vendor/windows/cubeinstaller.nsi \
+		$(srcdir)/vendor/windows/include/*
+

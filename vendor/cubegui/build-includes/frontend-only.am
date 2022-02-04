@@ -1,0 +1,120 @@
+##*************************************************************************##
+##  CUBE        http://www.scalasca.org/                                   ##
+##*************************************************************************##
+##  Copyright (c) 1998-2019                                                ##
+##  Forschungszentrum Juelich GmbH, Juelich Supercomputing Centre          ##
+##                                                                         ##
+##  Copyright (c) 2009-2015                                                ##
+##  German Research School for Simulation Sciences GmbH,                   ##
+##  Laboratory for Parallel Programming                                    ##
+##                                                                         ##
+##  This software may be modified and distributed under the terms of       ##
+##  a BSD-style license.  See the COPYING file in the package base         ##
+##  directory for details.                                                 ##
+##*************************************************************************##
+
+
+
+include ../src/tools/Makefile.inc.am
+
+
+include ../examples/Makefile.gui-plugin.examples.inc.am
+include ../src/GUI-qt/Makefile.gui-qt4.inc.am
+
+
+if WITH_GUI_PLUGIN_LAUNCH
+include ../src/GUI-qt/plugins/launch/Makefile.launch-plugin.inc.am
+endif
+
+if WITH_GUI_PLUGIN_SYSTEM_TOPOLOGY
+include ../src/GUI-qt/plugins/SystemTopology/Makefile.system-topology.inc.am
+endif
+
+if WITH_GUI_PLUGIN_SYSTEM_STATISTICS
+include ../src/GUI-qt/plugins/SystemStatistics/Makefile.system-statistics.inc.am
+endif
+
+if WITH_GUI_PLUGIN_GRAPHWIDGET_COMMON
+include ../src/GUI-qt/plugins/Graphwidget-common/Makefile.GraphWidgetCommon-plugin.inc.am
+endif
+
+if WITH_GUI_PLUGIN_HEATMAP
+include ../src/GUI-qt/plugins/Heatmap/Makefile.heatmap-plugin.inc.am
+endif
+
+if WITH_GUI_PLUGIN_BARPLOT
+include ../src/GUI-qt/plugins/Barplot/Makefile.barplot-plugin.inc.am
+endif
+
+if WITH_GUI_PLUGIN_SOURCE_EDITOR
+include ../src/GUI-qt/plugins/SourceCodeEditor/Makefile.source-plugin.inc.am
+endif
+
+if WITH_GUI_PLUGIN_STATISTICS
+include ../src/GUI-qt/plugins/Statistics/Makefile.statistics-plugin.inc.am
+endif
+
+if WITH_GUI_PLUGIN_ADVISOR
+include ../src/GUI-qt/plugins/Advisor/Makefile.advisor-plugin.inc.am
+endif
+
+
+if WITH_GUI_PLUGIN_VAMPIR
+include ../src/GUI-qt/plugins/VampirPlugin/Makefile.vampir-plugin.inc.am
+endif
+
+if WITH_GUI_PLUGIN_PARAVER
+include ../src/GUI-qt/plugins/ParaverPlugin/Makefile.paraver-plugin.inc.am
+endif
+
+if WITH_GUI_PLUGIN_ADVANCEDCM
+include ../src/GUI-qt/plugins/AdvancedColorMaps/Makefile.advancedcm-plugin.inc.am
+endif
+
+if WITH_GUI_PLUGIN_CUBE_DIFF
+include ../src/GUI-qt/plugins/CubeDiff/Makefile.diff-plugin.inc.am
+endif
+
+if WITH_GUI_PLUGIN_SCALING
+include ../src/GUI-qt/plugins/Scaling/Makefile.scaling-plugin.inc.am
+endif
+
+if WITH_GUI_PLUGIN_CUBE_MEAN
+include ../src/GUI-qt/plugins/CubeMean/Makefile.mean-plugin.inc.am
+endif
+
+if WITH_GUI_PLUGIN_CUBE_MERGE
+include ../src/GUI-qt/plugins/CubeMerge/Makefile.merge-plugin.inc.am
+endif
+
+if WITH_GUI_PLUGIN_TAU2CUBE
+include ../src/GUI-qt/plugins/Tau2Cube/Makefile.tau2cube-plugin.inc.am
+endif
+
+
+if WITH_GUI_PLUGIN_SUNBURST
+include ../src/GUI-qt/plugins/Sunburst/Makefile.sunburst-plugin.inc.am
+endif
+
+if WITH_GUI_PLUGIN_CUBE_METRIC_EDITOR
+include ../src/GUI-qt/plugins/MetricEditor/Makefile.metric-editor-plugin.inc.am
+endif
+
+if WITH_GUI_PLUGIN_CUBE_METRIC_IDENTIFY
+include ../src/GUI-qt/plugins/MetricIdentify/Makefile.metric-identify-plugin.inc.am
+endif
+
+if WITH_GUI_PLUGIN_CUBE_TREEITEM_MARKER
+include ../src/GUI-qt/plugins/TreeItemMarker/Makefile.marker.inc.am
+endif
+
+if WITH_GUI_PLUGIN_SCOREP_CONFIG
+include ../src/GUI-qt/plugins/ScorePConfig/Makefile.scorepconfig-plugin.inc.am
+endif
+
+
+
+
+
+
+

@@ -1,0 +1,47 @@
+##*************************************************************************##
+##  CUBE        http://www.scalasca.org/                                   ##
+##*************************************************************************##
+##  Copyright (c) 1998-2019                                                ##
+##  Forschungszentrum Juelich GmbH, Juelich Supercomputing Centre          ##
+##                                                                         ##
+##  This software may be modified and distributed under the terms of       ##
+##  a BSD-style license.  See the COPYING file in the package base         ##
+##  directory for details.                                                 ##
+##*************************************************************************##
+
+
+## --------------- CALLTREE ---------------------------
+
+scaling_plugindir = $(libdir)/cube-plugins
+scaling_plugin_LTLIBRARIES = scaling-plugin.la
+
+scaling_plugin_la_SOURCES = \
+$(SRC_ROOT)src/GUI-qt/plugins/Scaling/CubeScaling.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/Scaling/CubeScaling.h
+
+scaling_plugin_la_LIBADD =  \
+    $(CUBELIB_LIBADD) \
+    libcube4gui.la 
+scaling_plugin_la_LDFLAGS = $(QT_LDFLAGS) $(OPENMP_LDFLAGS) $(OPENMP_CXXFLAGS) $(SUBLIBS) $(QT_LIBS)  $(FRONTEND_LIBZ_LD) $(DBUS_LDFLAGS) $(CUBELIB_LDFLAGS)
+scaling_plugin_la_CXXFLAGS = $(AM_CXXFLAGS) $(CXXFLAGS_FOR_BUILD) $(OPENMP_CXXFLAGS) $(DBUS_CXXFLAGS) $(FRONTEND_LIBZ_HEADERS) \
+-I$(CUBE4_HEADERS_ROOT) $(QT_CXXFLAGS) $(QT_CPPFLAGS) -DCUBE_PREFIX='"$(prefix)"' $(CUBELIB_INCLUDEPATH) $(GUI_INCLUDES) \
+$(HMI_INSTRUMENTATION) \
+$(CUBE_DEBUG_FLAGS)  -I.
+
+scaling_plugin_la_LDFLAGS +=  -module -avoid-version -shared # don't generate static library and version number of shared library
+
+
+scaling_plugin_moc_files = \
+../src/GUI-qt/plugins/Scaling/CubeScaling.moc.cpp
+
+scaling_plugin_moc_o=$(scaling_plugin_moc_files:%.moc.o=%.moc.cpp)
+
+CLEANFILES += $(scaling_plugin_moc_files)
+nodist_scaling_plugin_la_SOURCES = $(scaling_plugin_moc_files)
+
+$(scaling_plugin_moc_o):../src/GUI-qt/plugins/Scaling/%.moc.cpp: $(SRC_ROOT)src/GUI-qt/plugins/Scaling/%.h
+	@echo "Create moc file $@"
+	@$(MKDIR_P) ../src/GUI-qt/plugins/Scaling
+	@$(MOC) $(QT_CPPFLAGS) $(CUBELIB_INCLUDEPATH) $(GUI_INCLUDES) \
+        $(CUBE_DEBUG_FLAGS) $(DEFINE_TRACE_BROWSER) $< -o $@
+

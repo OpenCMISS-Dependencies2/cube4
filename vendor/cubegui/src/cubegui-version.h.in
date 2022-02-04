@@ -1,0 +1,98 @@
+/****************************************************************************
+**  CUBE        http://www.scalasca.org/                                   **
+*****************************************************************************
+**  Copyright (c) 1998-2020                                                **
+**  Forschungszentrum Juelich GmbH, Juelich Supercomputing Centre          **
+**                                                                         **
+**  This software may be modified and distributed under the terms of       **
+**  a BSD-style license.  See the COPYING file in the package base         **
+**  directory for details.                                                 **
+****************************************************************************/
+
+
+
+#ifndef CUBEGUI_VERSION_H
+#define CUBEGUI_VERSION_H
+
+
+/*-------------------------------------------------------------------------*/
+/**
+ *  @file  cubegui-version.h
+ *  @brief Provides the Cube package version information.
+ **/
+/*-------------------------------------------------------------------------*/
+
+
+/// @name Cube version information
+/// @{
+
+/// Cube revision number
+#define CUBEGUI_REVISION "@CUBEGUI_BUILD_REVISION@"
+
+/// Cube revision number
+#define CUBEGUI_REVISION_NUMBER @CUBEGUI_BUILD_REVISION@
+
+/// Cube revision number
+#define CUBEGUI_REVISION_STRING CUBEGUI_REVISION
+
+
+
+/// Cube major version number
+#define CUBEGUI_MAJOR_NUM   @PACKAGE_MAJOR@
+
+/// Cube minor version number
+#define CUBEGUI_MINOR_NUM   @PACKAGE_MINOR@
+
+/// Cube bugfix version number
+#define CUBEGUI_BUGFIX_NUM  @PACKAGE_BUGFIX@
+
+/// Cube major version number
+#define CUBEGUI_MAJOR   "@PACKAGE_MAJOR@"
+
+/// Cube minor version number
+#define CUBEGUI_MINOR   "@PACKAGE_MINOR@"
+
+/// Cube bugfix version number
+#define CUBEGUI_BUGFIX   "@PACKAGE_BUGFIX@"
+
+/// Cube suffix
+#define CUBEGUI_SUFFIX   "@PACKAGE_SUFFIX@"
+
+/// Cube suffix_internally
+#define CUBEGUI_SUFFIX_INTERNAL   @PACKAGE_SUFFIX@
+
+/// Cube version number (<i>major</i>.<i>minor</i>)
+#define CUBEGUI_SHORT_VERSION   CUBEGUI_MAJOR "." CUBEGUI_MINOR
+
+/// Cube full version number (<i>major</i>.<i>minor</i>.<i>bugfix</i>)
+#define CUBEGUI_FULL_VERSION   CUBEGUI_SHORT_VERSION "." CUBEGUI_BUGFIX
+
+/// Cube version number
+#define CUBEGUI_VERSION "@CUBEGUI_BUILD_VERSION@"
+
+/// Cube package name "cube"
+#define CUBEGUI_SHORT_NAME  "@CUBEGUI_BUILD_SHORT_NAME@"
+
+/// Cube package name "cube-4.x.1-XX"
+#define CUBEGUI_FULL_NAME   CUBEGUI_SHORT_NAME "-" CUBEGUI_FULL_VERSION CUBEGUI_SUFFIX
+
+/// Cube package name "cube-4.x.1-XX"
+#define CUBEGUI_FULL_NAME   CUBEGUI_SHORT_NAME "-" CUBEGUI_FULL_VERSION CUBEGUI_SUFFIX
+
+/// usage: #if (CUBEGUI_VERSION_NUMBER >= CUBEGUI_VERSION_CHECK(4, 5, 0))'
+/// Macro to build a single number out of major.minor.bugfix
+#define CUBEGUI_VERSION_CHECK( major, minor, bugfix ) ( ( major << 16 ) | ( minor << 8 ) | ( bugfix ) )
+
+/// usage: #if (CUBEGUI_VERSION_NUMBER >= CUBEGUI_VERSION_CHECK(4, 5, 0))'
+/// Cube package version as a single number
+#define CUBEGUI_VERSION_NUMBER CUBEGUI_VERSION_CHECK( CUBEGUI_MAJOR_NUM, CUBEGUI_MINOR_NUM, CUBEGUI_BUGFIX_NUM )
+
+/// Cube library interface information
+#define LIBRARY_CURRENT "@LIBRARY_CURRENT@"
+#define LIBRARY_REVISION "@LIBRARY_REVISION@"
+#define LIBRARY_AGE "@LIBRARY_AGE@"
+
+/// @}
+
+
+#endif   // !CUBEGUI_VERSION_H

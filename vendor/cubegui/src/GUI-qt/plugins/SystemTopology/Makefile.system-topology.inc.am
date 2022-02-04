@@ -1,0 +1,86 @@
+##*************************************************************************##
+##  CUBE        http://www.scalasca.org/                                   ##
+##*************************************************************************##
+##  Copyright (c) 1998-2019                                                ##
+##  Forschungszentrum Juelich GmbH, Juelich Supercomputing Centre          ##
+##                                                                         ##
+##  This software may be modified and distributed under the terms of       ##
+##  a BSD-style license.  See the COPYING file in the package base         ##
+##  directory for details.                                                 ##
+##*************************************************************************##
+
+
+topology_plugindir = $(libdir)/cube-plugins
+
+topology_plugin_LTLIBRARIES = topology-plugin.la
+ 
+topology_plugin_la_SOURCES = \
+$(SRC_ROOT)src/GUI-qt/plugins/SystemTopology/DimensionSelectionWidget.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/SystemTopology/DimensionSelectionWidget.h\
+$(SRC_ROOT)src/GUI-qt/plugins/SystemTopology/OrderWidget.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/SystemTopology/OrderWidget.h\
+$(SRC_ROOT)src/GUI-qt/plugins/SystemTopology/Plane.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/SystemTopology/Plane.h\
+$(SRC_ROOT)src/GUI-qt/plugins/SystemTopology/Point.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/SystemTopology/Point.h\
+$(SRC_ROOT)src/GUI-qt/plugins/SystemTopology/SystemTopology.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/SystemTopology/SystemTopology.h\
+$(SRC_ROOT)src/GUI-qt/plugins/SystemTopology/SystemTopologyData.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/SystemTopology/SystemTopologyData.h\
+$(SRC_ROOT)src/GUI-qt/plugins/SystemTopology/SystemTopologyDrawing.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/SystemTopology/SystemTopologyDrawing.h\
+$(SRC_ROOT)src/GUI-qt/plugins/SystemTopology/SystemTopologyToolBar.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/SystemTopology/SystemTopologyToolBar.h\
+$(SRC_ROOT)src/GUI-qt/plugins/SystemTopology/SystemTopologyView.h\
+$(SRC_ROOT)src/GUI-qt/plugins/SystemTopology/SystemTopologyViewTransform.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/SystemTopology/SystemTopologyViewTransform.h\
+$(SRC_ROOT)src/GUI-qt/plugins/SystemTopology/SystemTopologyWidget.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/SystemTopology/SystemTopologyWidget.h\
+$(SRC_ROOT)src/GUI-qt/plugins/SystemTopology/Tetragon.cpp\
+$(SRC_ROOT)src/GUI-qt/plugins/SystemTopology/Tetragon.h\
+$(SRC_ROOT)src/GUI-qt/plugins/SystemTopology/TopologyDimensionBar.cpp \
+$(SRC_ROOT)src/GUI-qt/plugins/SystemTopology/TopologyDimensionBar.h
+
+
+topology_plugin_la_LIBADD = \
+    $(CUBELIB_LIBADD)\
+    libcube4gui.la 
+topology_plugin_la_LDFLAGS = $(QT_LDFLAGS) $(OPENMP_LDFLAGS) $(OPENMP_CXXFLAGS) $(SUBLIBS) $(QT_LIBS)  $(FRONTEND_LIBZ_LD) $(DBUS_LDFLAGS) $(CUBELIB_LDFLAGS)
+topology_plugin_la_CXXFLAGS = $(AM_CXXFLAGS) $(CXXFLAGS_FOR_BUILD) $(OPENMP_CXXFLAGS) $(DBUS_CXXFLAGS) $(FRONTEND_LIBZ_HEADERS) \
+-I$(CUBE4_HEADERS_ROOT) $(QT_CXXFLAGS) $(QT_CPPFLAGS) -DCUBE_PREFIX='"$(prefix)"' $(CUBELIB_INCLUDEPATH) $(GUI_INCLUDES) \
+$(CUBE_DEBUG_FLAGS) $(HMI_INSTRUMENTATION) -I.
+
+topology_plugin_la_LDFLAGS += -module -avoid-version -shared # don't generate static library and version number of shared library
+
+
+topology_plugin_moc_files = \
+../src/GUI-qt/plugins/SystemTopology/DimensionSelectionWidget.moc.cpp\
+../src/GUI-qt/plugins/SystemTopology/OrderWidget.moc.cpp\
+../src/GUI-qt/plugins/SystemTopology/SystemTopology.moc.cpp\
+../src/GUI-qt/plugins/SystemTopology/SystemTopologyData.moc.cpp\
+../src/GUI-qt/plugins/SystemTopology/SystemTopologyDrawing.moc.cpp\
+../src/GUI-qt/plugins/SystemTopology/SystemTopologyToolBar.moc.cpp\
+../src/GUI-qt/plugins/SystemTopology/SystemTopologyView.moc.cpp\
+../src/GUI-qt/plugins/SystemTopology/SystemTopologyViewTransform.moc.cpp\
+../src/GUI-qt/plugins/SystemTopology/SystemTopologyWidget.moc.cpp\
+../src/GUI-qt/plugins/SystemTopology/TopologyDimensionBar.moc.cpp
+
+
+topology_plugin_moc_o=$(topology_plugin_moc_files:%.moc.o=%.moc.cpp)
+
+topology_plugin_qrc_files = ../src/GUI-qt/plugins/SystemTopology/cubeguires.qrc.cpp
+topology_plugin_qrc_o=$(topology_plugin_qrc_files:%.qrc.o=%.qrc.cpp)
+
+CLEANFILES += $(topology_plugin_moc_files)
+nodist_topology_plugin_la_SOURCES = $(topology_plugin_moc_files)
+
+$(topology_plugin_moc_o): ../src/GUI-qt/plugins/SystemTopology/%.moc.cpp: $(SRC_ROOT)src/GUI-qt/plugins/SystemTopology/%.h
+	@echo "Create system topology moc file $@"
+	@$(MKDIR_P) ../src/GUI-qt/plugins/SystemTopology
+	@$(MOC) $(QT_CPPFLAGS) $(CUBELIB_INCLUDEPATH) $(GUI_INCLUDES) \
+        $(CUBE_DEBUG_FLAGS) $(DEFINE_TRACE_BROWSER) $< -o $@
+
+$(topology_plugin_qrc_o):../src/GUI-qt/plugins/SystemTopology/%.qrc.cpp: $(SRC_ROOT)src/GUI-qt/plugins/SystemTopology/%.qrc
+	@echo "Create system topology resource file $@"
+	@$(MKDIR_P) ../src/GUI-qt
+	@$(RCC) -name `echo "$<" | sed 's|^.*/\(.*\)\.qrc$$|\1|'` $< -o $@
